@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Master: Triple</title>
+    <title>Clover Master: Duo Speed</title>
     <style>
         body {
             margin: 0; padding: 0;
@@ -115,11 +115,11 @@
             cl.onclick = catchFunc;
         }
 
+        // Спавним ровно 2 клевера каждую секунду
         setInterval(() => {
             if (caughtInLevel < totalNeeded) {
                 createClover();
                 setTimeout(createClover, 50);
-                setTimeout(createClover, 100);
             }
         }, 1000);
 
