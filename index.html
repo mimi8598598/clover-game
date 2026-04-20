@@ -3,140 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Tycoon: Pro UI</title>
+    <title>Clover Tycoon: RPG Shop</title>
     <style>
-        :root { --neon: #4aff4a; --gold: #ffd700; }
+        :root { --neon: #4aff4a; --gold: #ffd700; --bg: #001500; }
         body { margin: 0; background: #051a05; color: white; font-family: 'Arial Black', sans-serif; overflow: hidden; height: 100vh; touch-action: none; }
         
-        /* ИНТЕРФЕЙС - не мешает кликать */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; }
-        .clickable { pointer-events: auto; }
-
-        /* ВЕРХНИЙ СЧЕТЧИК */
-        #top-info { margin-top: 15px; text-align: center; }
-        #money-display { font-size: 38px; color: var(--gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-        .lvl-tag { font-size: 12px; color: var(--neon); background: rgba(0,0,0,0.4); padding: 2px 10px; border-radius: 10px; }
-
-        /* МАГАЗИН */
-        #shop-toggle { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--neon); color: black; border: none; padding: 10px 30px; border-radius: 25px; font-weight: bold; box-shadow: 0 0 15px var(--neon); cursor: pointer; }
+        #game-screen { width: 100%; height: 100%; position: relative; }
+        #ui-top { position: absolute; top: 15px; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
+        #money-display { font-size: 40px; color: var(--gold); text-shadow: 0 0 10px gold; }
         
-        #shop-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 350px; background: rgba(0,20,0,0.98); border: 2px solid var(--neon); border-radius: 20px; padding: 20px; box-shadow: 0 0 50px black; pointer-events: auto; }
-        .upgrade-item { background: rgba(255,255,255,0.05); padding: 12px; margin: 8px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--neon); }
-        .buy-btn { background: var(--neon); border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .shop-bal { text-align: right; color: var(--gold); font-size: 14px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
-        .close-x { float: right; color: #ff4444; cursor: pointer; font-size: 20px; }
+        /* ПОЛНОЭКРАННЫЙ МАГАЗИН */
+        #shop-page { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bg); z-index: 100; flex-direction: column; align-items: center; padding-top: 20px;
+            overflow-y: auto;
+        }
+        .shop-header { text-align: center; margin-bottom: 20px; }
+        .shop-title { color: var(--neon); font-size: 32px; text-shadow: 0 0 10px var(--neon); }
+        .shop-bal-big { font-size: 20px; color: var(--gold); }
 
-        /* ЛИНИЯ И КЛЕВЕРЫ */
-        #bottom-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background: #111; }
-        #progress-line { height: 100%; width: 0%; background: var(--neon); box-shadow: 0 0 10px var(--neon); transition: width 0.3s; }
-        .clover { position: absolute; font-size: 60px; cursor: pointer; padding: 40px; margin: -40px; z-index: 5; }
+        /* КАРТОЧКИ ТОВАРОВ */
+        .upgrade-list { width: 90%; max-width: 400px; }
+        .upgrade-card { 
+            background: rgba(255,255,255,0.07); padding: 12px; border-radius: 15px; 
+            margin-bottom: 12px; border-left: 5px solid var(--neon); display: flex; justify-content: space-between; align-items: center;
+        }
+        .up-text { flex: 1; margin-right: 10px; }
+        .up-name { font-size: 14px; color: var(--neon); display: block; }
+        .up-desc { font-size: 10px; color: #aaa; }
+        .up-price { font-size: 13px; color: var(--gold); display: block; margin-top: 4px; }
+        
+        .buy-btn { background: var(--neon); border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; min-width: 80px; }
+        .buy-btn:active { transform: scale(0.9); }
+
+        .exit-btn { background: #ff4444; color: white; border: none; padding: 15px 60px; border-radius: 30px; font-size: 18px; margin: 20px 0; cursor: pointer; box-shadow: 0 0 15px rgba(255,0,0,0.4); }
+
+        /* ТАЙМЕР И ЛИНИЯ */
+        #countdown { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; color: var(--neon); z-index: 200; pointer-events: none; }
+        #bottom-line { position: absolute; bottom: 0; width: 100%; height: 8px; background: #111; }
+        #progress-fill { height: 100%; width: 0%; background: var(--neon); box-shadow: 0 0 10px var(--neon); transition: width 0.3s; }
+        .clover { position: absolute; font-size: 60px; z-index: 5; padding: 40px; margin: -40px; }
+        #shop-open-btn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--neon); color: black; border: none; padding: 12px 40px; border-radius: 30px; font-weight: bold; z-index: 20; box-shadow: 0 0 15px var(--neon); }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer">
-        <div id="top-info">
+    <div id="game-screen">
+        <div id="ui-top">
             <div id="money-display">0</div>
-            <span class="lvl-tag">УРОВЕНЬ <span id="lvl">1</span></span>
+            <div style="font-size:12px; color:var(--neon)">УРОВЕНЬ <span id="lvl">1</span></div>
         </div>
+        <button id="shop-open-btn" onclick="openShop()">🛒 МАГАЗИН</button>
+        <div id="bottom-line"><div id="progress-fill"></div></div>
+    </div>
 
-        <button id="shop-toggle" class="clickable" onclick="toggleShop()">🛒 МАГАЗИН</button>
-
-        <div id="shop-modal">
-            <span class="close-x" onclick="toggleShop()">✖</span>
-            <h3 style="margin:0 0 15px 0; color:var(--neon)">УЛУЧШЕНИЯ</h3>
-            
-            <div class="upgrade-item">
-                <div class="up-info"><b>💪 СИЛА</b><br><small>Цена: </small><span id="c-click" style="color:var(--gold)">20</span></div>
-                <button class="buy-btn" onclick="buy('click')">КУПИТЬ</button>
+    <div id="shop-page">
+        <div class="shop-header">
+            <div class="shop-title">УЛУЧШЕНИЯ</div>
+            <div class="shop-bal-big">БАЛАНС: <span id="shop-money">0</span> 🍀</div>
+        </div>
+        
+        <div class="upgrade-list">
+            <div class="upgrade-card">
+                <div class="up-text">
+                    <span class="up-name">💪 СИЛА КЛИКА</span>
+                    <span class="up-desc">Дает больше очков за один клик</span>
+                    <span class="up-price">Цена: <span id="c-pwr">20</span></span>
+                </div>
+                <button class="buy-btn" onclick="buy('pwr')">КУПИТЬ</button>
             </div>
-            
-            <div class="upgrade-item">
-                <div class="up-info"><b>🤖 АВТО</b><br><small>Цена: </small><span id="c-auto" style="color:var(--gold)">50</span></div>
+
+            <div class="upgrade-card">
+                <div class="up-text">
+                    <span class="up-name">🤖 АВТО-РОБОТ</span>
+                    <span class="up-desc">Собирает клеверы сам каждую секунду</span>
+                    <span class="up-price">Цена: <span id="c-auto">50</span></span>
+                </div>
                 <button class="buy-btn" onclick="buy('auto')">КУПИТЬ</button>
             </div>
 
-            <div class="shop-bal">Твой баланс: <span id="inner-bal">0</span> 🍀</div>
+            <div class="upgrade-card">
+                <div class="up-text">
+                    <span class="up-name">🍀 ПЛОДОВИТОСТЬ</span>
+                    <span class="up-desc">Больше клеверов падает одновременно</span>
+                    <span class="up-price">Цена: <span id="c-mult">100</span></span>
+                </div>
+                <button class="buy-btn" onclick="buy('mult')">КУПИТЬ</button>
+            </div>
+
+            <div class="upgrade-card">
+                <div class="up-text">
+                    <span class="up-name">⏱ ЗАМЕДЛЕНИЕ</span>
+                    <span class="up-desc">Клеверы падают медленнее</span>
+                    <span class="up-price">Цена: <span id="c-slow">150</span></span>
+                </div>
+                <button class="buy-btn" onclick="buy('slow')">КУПИТЬ</button>
+            </div>
         </div>
+
+        <button class="exit-btn" onclick="closeShop()">В ИГРУ</button>
     </div>
 
-    <div id="bottom-bar"><div id="progress-line"></div></div>
+    <div id="countdown">5</div>
 
     <script>
         let data = {
             bal: parseInt(localStorage.getItem('cl_bal')) || 0,
             lvl: parseInt(localStorage.getItem('cl_lvl')) || 1,
             pwr: parseInt(localStorage.getItem('cl_pwr')) || 1,
-            auto: parseInt(localStorage.getItem('cl_auto')) || 0
+            auto: parseInt(localStorage.getItem('cl_auto')) || 0,
+            mult: parseInt(localStorage.getItem('cl_mult')) || 1,
+            slow: parseInt(localStorage.getItem('cl_slow')) || 0
         };
 
-        let caught = 0;
-        let need = 20 + (data.pwr * 15) + (data.lvl * 10);
-
-        function save() {
-            for(let key in data) localStorage.setItem('cl_'+key, data[key]);
-        }
+        let caught = 0, isPaused = false;
+        function getNeed() { return 50 + (data.lvl * 50) + (data.pwr * 10); }
+        let need = getNeed();
 
         function updateUI() {
             document.getElementById('money-display').innerText = Math.floor(data.bal);
-            document.getElementById('inner-bal').innerText = Math.floor(data.bal);
+            document.getElementById('shop-money').innerText = Math.floor(data.bal);
             document.getElementById('lvl').innerText = data.lvl;
-            document.getElementById('c-click').innerText = Math.floor(20 * Math.pow(1.6, data.pwr - 1));
+            document.getElementById('c-pwr').innerText = Math.floor(20 * Math.pow(1.6, data.pwr - 1));
             document.getElementById('c-auto').innerText = Math.floor(50 * Math.pow(1.7, data.auto));
-            let prog = (caught / need) * 100;
-            document.getElementById('progress-line').style.width = Math.min(100, prog) + "%";
+            document.getElementById('c-mult').innerText = Math.floor(100 * Math.pow(2, data.mult - 1));
+            document.getElementById('c-slow').innerText = Math.floor(150 * Math.pow(1.8, data.slow));
+            document.getElementById('progress-fill').style.width = Math.min(100, (caught/need)*100) + "%";
         }
 
-        function toggleShop() {
-            let s = document.getElementById('shop-modal');
-            s.style.display = (s.style.display === 'block') ? 'none' : 'block';
-            updateUI();
+        function openShop() { isPaused = true; document.getElementById('shop-page').style.display = 'flex'; updateUI(); }
+        function closeShop() { document.getElementById('shop-page').style.display = 'none'; startCountdown(); }
+
+        function startCountdown() {
+            let count = 5;
+            const display = document.getElementById('countdown');
+            display.style.display = 'block'; display.innerText = count;
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) display.innerText = count;
+                else { clearInterval(timer); display.style.display = 'none'; isPaused = false; }
+            }, 1000);
         }
 
         function buy(type) {
-            if (type === 'click') {
-                let cost = Math.floor(20 * Math.pow(1.6, data.pwr - 1));
-                if (data.bal >= cost) { data.bal -= cost; data.pwr++; }
-            } else if (type === 'auto') {
-                let cost = Math.floor(50 * Math.pow(1.7, data.auto));
-                if (data.bal >= cost) { data.bal -= cost; data.auto++; }
+            let cost = 0;
+            if (type === 'pwr') cost = Math.floor(20 * Math.pow(1.6, data.pwr - 1));
+            if (type === 'auto') cost = Math.floor(50 * Math.pow(1.7, data.auto));
+            if (type === 'mult') cost = Math.floor(100 * Math.pow(2, data.mult - 1));
+            if (type === 'slow') cost = Math.floor(150 * Math.pow(1.8, data.slow));
+
+            if (data.bal >= cost) {
+                data.bal -= cost;
+                data[type]++;
+                for(let key in data) localStorage.setItem('cl_'+key, data[key]);
+                need = getNeed();
+                updateUI();
             }
-            need = 20 + (data.pwr * 15) + (data.lvl * 10);
-            save(); updateUI();
         }
 
         function createClover() {
-            if (caught >= need) return;
+            if (isPaused || caught >= need) return;
             const c = document.createElement('div');
             c.className = 'clover'; c.innerHTML = '🍀';
             c.style.left = Math.random() * (window.innerWidth - 80) + 40 + 'px';
             c.style.top = '-80px';
             document.body.appendChild(c);
-            let y = -80, speed = 3.5 + (data.lvl * 0.1);
+            
+            let y = -80;
+            let speed = (3.5 + (data.lvl * 0.1)) - (data.slow * 0.3);
+            if (speed < 1.5) speed = 1.5;
+
             const fly = setInterval(() => {
-                y += speed;
-                c.style.transform = `translateY(${y + 80}px)`;
+                if (!isPaused) {
+                    y += speed;
+                    c.style.transform = `translateY(${y + 80}px)`;
+                }
                 if (y > window.innerHeight) { clearInterval(fly); c.remove(); }
             }, 16);
+
             const hit = (e) => {
-                e.preventDefault(); if (c.dataset.h) return; c.dataset.h = "true";
-                clearInterval(fly); c.remove();
+                e.preventDefault(); if (c.dataset.h || isPaused) return; 
+                c.dataset.h = "true"; clearInterval(fly); c.remove();
                 data.bal += data.pwr; caught += data.pwr;
-                if (caught >= need) { data.lvl++; caught = 0; need = 20 + (data.pwr * 15) + (data.lvl * 10); }
-                save(); updateUI();
+                if (caught >= need) { data.lvl++; caught = 0; need = getNeed(); localStorage.setItem('cl_lvl', data.lvl); }
+                localStorage.setItem('cl_bal', data.bal);
+                updateUI();
             };
             c.onclick = hit; c.addEventListener('touchstart', hit);
         }
 
-        setInterval(() => {
-            if (data.auto > 0 && caught < need) {
-                data.bal += data.auto; caught += data.auto;
-                if (caught >= need) { data.lvl++; caught = 0; need = 20 + (data.pwr * 15) + (data.lvl * 10); }
-                save(); updateUI();
-            }
+        // Спавн с учетом плодовитости
+        setInterval(() => { 
+            if (!isPaused && caught < need) { 
+                for(let i=0; i < data.mult; i++) {
+                    setTimeout(createClover, i * 200); 
+                }
+            } 
         }, 1000);
 
-        setInterval(() => { if(caught < need) { createClover(); setTimeout(createClover, 200); } }, 1000);
+        // Авто-сбор
+        setInterval(() => { if (!isPaused && data.auto > 0 && caught < need) { data.bal += data.auto; caught += data.auto; updateUI(); } }, 1000);
+
         updateUI();
     </script>
 </body>
