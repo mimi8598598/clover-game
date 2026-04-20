@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Tycoon: RPG Shop</title>
+    <title>Clover Tycoon: Music Edition</title>
     <style>
         :root { --neon: #4aff4a; --gold: #ffd700; --bg: #001500; }
         body { margin: 0; background: #051a05; color: white; font-family: 'Arial Black', sans-serif; overflow: hidden; height: 100vh; touch-action: none; }
@@ -12,7 +12,6 @@
         #ui-top { position: absolute; top: 15px; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
         #money-display { font-size: 40px; color: var(--gold); text-shadow: 0 0 10px gold; }
         
-        /* ПОЛНОЭКРАННЫЙ МАГАЗИН */
         #shop-page { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: var(--bg); z-index: 100; flex-direction: column; align-items: center; padding-top: 20px;
@@ -22,7 +21,6 @@
         .shop-title { color: var(--neon); font-size: 32px; text-shadow: 0 0 10px var(--neon); }
         .shop-bal-big { font-size: 20px; color: var(--gold); }
 
-        /* КАРТОЧКИ ТОВАРОВ */
         .upgrade-list { width: 90%; max-width: 400px; }
         .upgrade-card { 
             background: rgba(255,255,255,0.07); padding: 12px; border-radius: 15px; 
@@ -34,11 +32,8 @@
         .up-price { font-size: 13px; color: var(--gold); display: block; margin-top: 4px; }
         
         .buy-btn { background: var(--neon); border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; min-width: 80px; }
-        .buy-btn:active { transform: scale(0.9); }
+        .exit-btn { background: #ff4444; color: white; border: none; padding: 15px 60px; border-radius: 30px; font-size: 18px; margin: 20px 0; cursor: pointer; }
 
-        .exit-btn { background: #ff4444; color: white; border: none; padding: 15px 60px; border-radius: 30px; font-size: 18px; margin: 20px 0; cursor: pointer; box-shadow: 0 0 15px rgba(255,0,0,0.4); }
-
-        /* ТАЙМЕР И ЛИНИЯ */
         #countdown { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; color: var(--neon); z-index: 200; pointer-events: none; }
         #bottom-line { position: absolute; bottom: 0; width: 100%; height: 8px; background: #111; }
         #progress-fill { height: 100%; width: 0%; background: var(--neon); box-shadow: 0 0 10px var(--neon); transition: width 0.3s; }
@@ -46,7 +41,11 @@
         #shop-open-btn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--neon); color: black; border: none; padding: 12px 40px; border-radius: 30px; font-weight: bold; z-index: 20; box-shadow: 0 0 15px var(--neon); }
     </style>
 </head>
-<body>
+<body onclick="startMusic()">
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="game-screen">
         <div id="ui-top">
@@ -67,46 +66,53 @@
             <div class="upgrade-card">
                 <div class="up-text">
                     <span class="up-name">💪 СИЛА КЛИКА</span>
-                    <span class="up-desc">Дает больше очков за один клик</span>
+                    <span class="up-desc">Больше очков за клик</span>
                     <span class="up-price">Цена: <span id="c-pwr">20</span></span>
                 </div>
                 <button class="buy-btn" onclick="buy('pwr')">КУПИТЬ</button>
             </div>
-
             <div class="upgrade-card">
                 <div class="up-text">
                     <span class="up-name">🤖 АВТО-РОБОТ</span>
-                    <span class="up-desc">Собирает клеверы сам каждую секунду</span>
+                    <span class="up-desc">Собирает сам каждую сек.</span>
                     <span class="up-price">Цена: <span id="c-auto">50</span></span>
                 </div>
                 <button class="buy-btn" onclick="buy('auto')">КУПИТЬ</button>
             </div>
-
             <div class="upgrade-card">
                 <div class="up-text">
                     <span class="up-name">🍀 ПЛОДОВИТОСТЬ</span>
-                    <span class="up-desc">Больше клеверов падает одновременно</span>
+                    <span class="up-desc">Больше клеверов сразу</span>
                     <span class="up-price">Цена: <span id="c-mult">100</span></span>
                 </div>
                 <button class="buy-btn" onclick="buy('mult')">КУПИТЬ</button>
             </div>
-
             <div class="upgrade-card">
                 <div class="up-text">
                     <span class="up-name">⏱ ЗАМЕДЛЕНИЕ</span>
-                    <span class="up-desc">Клеверы падают медленнее</span>
+                    <span class="up-desc">Падают медленнее</span>
                     <span class="up-price">Цена: <span id="c-slow">150</span></span>
                 </div>
                 <button class="buy-btn" onclick="buy('slow')">КУПИТЬ</button>
             </div>
         </div>
-
         <button class="exit-btn" onclick="closeShop()">В ИГРУ</button>
     </div>
 
     <div id="countdown">5</div>
 
     <script>
+        let music = document.getElementById('bgMusic');
+        let musicStarted = false;
+
+        function startMusic() {
+            if (!musicStarted) {
+                music.volume = 0.4;
+                music.play();
+                musicStarted = true;
+            }
+        }
+
         let data = {
             bal: parseInt(localStorage.getItem('cl_bal')) || 0,
             lvl: parseInt(localStorage.getItem('cl_lvl')) || 1,
@@ -117,7 +123,7 @@
         };
 
         let caught = 0, isPaused = false;
-        function getNeed() { return 50 + (data.lvl * 50) + (data.pwr * 10); }
+        function getNeed() { return 50 + (data.lvl * 50); }
         let need = getNeed();
 
         function updateUI() {
@@ -131,17 +137,32 @@
             document.getElementById('progress-fill').style.width = Math.min(100, (caught/need)*100) + "%";
         }
 
-        function openShop() { isPaused = true; document.getElementById('shop-page').style.display = 'flex'; updateUI(); }
-        function closeShop() { document.getElementById('shop-page').style.display = 'none'; startCountdown(); }
+        function openShop() { 
+            isPaused = true; 
+            document.getElementById('shop-page').style.display = 'flex'; 
+            music.volume = 0.15; // Приглушаем музыку
+            updateUI(); 
+        }
+
+        function closeShop() { 
+            document.getElementById('shop-page').style.display = 'none'; 
+            startCountdown(); 
+        }
 
         function startCountdown() {
             let count = 5;
+            music.volume = 0.1; // Совсем тихо во время отсчета
             const display = document.getElementById('countdown');
             display.style.display = 'block'; display.innerText = count;
             const timer = setInterval(() => {
                 count--;
                 if (count > 0) display.innerText = count;
-                else { clearInterval(timer); display.style.display = 'none'; isPaused = false; }
+                else { 
+                    clearInterval(timer); 
+                    display.style.display = 'none'; 
+                    isPaused = false; 
+                    music.volume = 0.4; // Возвращаем громкость
+                }
             }, 1000);
         }
 
@@ -153,10 +174,8 @@
             if (type === 'slow') cost = Math.floor(150 * Math.pow(1.8, data.slow));
 
             if (data.bal >= cost) {
-                data.bal -= cost;
-                data[type]++;
+                data.bal -= cost; data[type]++;
                 for(let key in data) localStorage.setItem('cl_'+key, data[key]);
-                need = getNeed();
                 updateUI();
             }
         }
@@ -168,11 +187,8 @@
             c.style.left = Math.random() * (window.innerWidth - 80) + 40 + 'px';
             c.style.top = '-80px';
             document.body.appendChild(c);
-            
             let y = -80;
             let speed = (3.5 + (data.lvl * 0.1)) - (data.slow * 0.3);
-            if (speed < 1.5) speed = 1.5;
-
             const fly = setInterval(() => {
                 if (!isPaused) {
                     y += speed;
@@ -180,7 +196,6 @@
                 }
                 if (y > window.innerHeight) { clearInterval(fly); c.remove(); }
             }, 16);
-
             const hit = (e) => {
                 e.preventDefault(); if (c.dataset.h || isPaused) return; 
                 c.dataset.h = "true"; clearInterval(fly); c.remove();
@@ -192,18 +207,8 @@
             c.onclick = hit; c.addEventListener('touchstart', hit);
         }
 
-        // Спавн с учетом плодовитости
-        setInterval(() => { 
-            if (!isPaused && caught < need) { 
-                for(let i=0; i < data.mult; i++) {
-                    setTimeout(createClover, i * 200); 
-                }
-            } 
-        }, 1000);
-
-        // Авто-сбор
+        setInterval(() => { if (!isPaused && caught < need) { for(let i=0; i < data.mult; i++) setTimeout(createClover, i * 200); } }, 1000);
         setInterval(() => { if (!isPaused && data.auto > 0 && caught < need) { data.bal += data.auto; caught += data.auto; updateUI(); } }, 1000);
-
         updateUI();
     </script>
 </body>
