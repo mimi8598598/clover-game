@@ -103,11 +103,11 @@
 
     <script>
         let music = document.getElementById('bgMusic');
-        let musicStarted = false;
+        let musicStarted = true;
 
         function startMusic() {
             if (!musicStarted) {
-                music.volume = 0.4;
+                music.volume = 1.2;
                 music.play();
                 musicStarted = true;
             }
