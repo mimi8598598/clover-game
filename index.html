@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clover Luck</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #1a1a1a; color: white; text-align: center; font-family: sans-serif; overflow: hidden; margin: 0; }
+        #score { font-size: 30px; padding: 20px; color: #4cd137; font-weight: bold; }
+        .item { font-size: 60px; position: absolute; cursor: pointer; user-select: none; }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <div id="game-area"></div>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        let score = 0;
+        function spawn() {
+            const area = document.getElementById('game-area');
+            area.innerHTML = '';
+            for(let i=0; i<40; i++) createEmoji('🌿', false);
+            createEmoji('🍀', true);
+        }
+        function createEmoji(emo, isTarget) {
+            const el = document.createElement('div');
+            el.className = 'item';
+            el.innerText = emo;
+            el.style.left = Math.random() * (window.innerWidth - 70) + 'px';
+            el.style.top = (Math.random() * (window.innerHeight - 180) + 80) + 'px';
+            el.onclick = () => {
+                if(isTarget) {
+                    score++;
+                    document.getElementById('score').innerText = 'Score: ' + score;
+                    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                    spawn();
+                }
+            };
+            document.getElementById('game-area').appendChild(el);
+        }
+        spawn();
+    </script>
+</body>
+</html>
