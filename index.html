@@ -3,212 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Tycoon: Music Edition</title>
+    <title>Clover Neon: Daily Quests</title>
     <style>
-        :root { --neon: #4aff4a; --gold: #ffd700; --bg: #001500; }
-        body { margin: 0; background: #051a05; color: white; font-family: 'Arial Black', sans-serif; overflow: hidden; height: 100vh; touch-action: none; }
+        :root { --neon: #4aff4a; --pink: #ff00ff; --cyan: #00ffff; --gold: #ffd700; --fire: #ff4400; }
         
-        #game-screen { width: 100%; height: 100%; position: relative; }
-        #ui-top { position: absolute; top: 15px; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
-        #money-display { font-size: 40px; color: var(--gold); text-shadow: 0 0 10px gold; }
-        
-        #shop-page { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--bg); z-index: 100; flex-direction: column; align-items: center; padding-top: 20px;
-            overflow-y: auto;
+        body { 
+            margin: 0; color: white; font-family: 'Arial Black', sans-serif; 
+            overflow: hidden; height: 100vh; touch-action: none;
+            transition: background 2s ease;
+            background: #000;
         }
-        .shop-header { text-align: center; margin-bottom: 20px; }
-        .shop-title { color: var(--neon); font-size: 32px; text-shadow: 0 0 10px var(--neon); }
-        .shop-bal-big { font-size: 20px; color: var(--gold); }
-
-        .upgrade-list { width: 90%; max-width: 400px; }
-        .upgrade-card { 
-            background: rgba(255,255,255,0.07); padding: 12px; border-radius: 15px; 
-            margin-bottom: 12px; border-left: 5px solid var(--neon); display: flex; justify-content: space-between; align-items: center;
-        }
-        .up-text { flex: 1; margin-right: 10px; }
-        .up-name { font-size: 14px; color: var(--neon); display: block; }
-        .up-desc { font-size: 10px; color: #aaa; }
-        .up-price { font-size: 13px; color: var(--gold); display: block; margin-top: 4px; }
         
-        .buy-btn { background: var(--neon); border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; min-width: 80px; }
-        .exit-btn { background: #ff4444; color: white; border: none; padding: 15px 60px; border-radius: 30px; font-size: 18px; margin: 20px 0; cursor: pointer; }
+        /* НЕОНОВЫЕ ФОНЫ */
+        .bg-neon-1 { background: radial-gradient(circle, #200122 0%, #000000 100%); }
+        .bg-neon-2 { background: linear-gradient(135deg, #000428 0%, #004e92 100%); }
+        .bg-neon-3 { background: radial-gradient(circle, #1a0033 0%, #050505 100%); }
+        .bg-neon-4 { background: linear-gradient(to right, #0f0c29, #302b63, #24243e); }
 
-        #countdown { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; color: var(--neon); z-index: 200; pointer-events: none; }
-        #bottom-line { position: absolute; bottom: 0; width: 100%; height: 8px; background: #111; }
-        #progress-fill { height: 100%; width: 0%; background: var(--neon); box-shadow: 0 0 10px var(--neon); transition: width 0.3s; }
-        .clover { position: absolute; font-size: 60px; z-index: 5; padding: 40px; margin: -40px; }
-        #shop-open-btn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--neon); color: black; border: none; padding: 12px 40px; border-radius: 30px; font-weight: bold; z-index: 20; box-shadow: 0 0 15px var(--neon); }
+        #ui-top { position: absolute; top: 15px; width: 100%; text-align: center; z-index: 20; }
+        #money-display { font-size: 45px; color: var(--gold); text-shadow: 0 0 20px var(--gold); }
+        #hp-display { font-size: 28px; margin: 5px 0; }
+
+        /* ЕЖЕДНЕВНЫЕ ЗАДАНИЯ */
+        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; padding-top: 20px; overflow-y: auto; }
+        .quest-card { 
+            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-bottom: 12px; 
+            width: 85%; border: 2px solid var(--cyan); box-shadow: 0 0 10px var(--cyan);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .quest-done { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); opacity: 0.7; }
+
+        /* КНОПКИ */
+        #nav-btns { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 30; }
+        .nav-btn { background: none; color: white; border: 2px solid var(--pink); padding: 12px 25px; border-radius: 30px; font-weight: bold; text-shadow: 0 0 5px var(--pink); box-shadow: 0 0 10px var(--pink); }
+        
+        .clover { position: absolute; font-size: 60px; z-index: 5; padding: 40px; margin: -40px; filter: drop-shadow(0 0 10px var(--neon)); }
+        #progress-container { position: absolute; bottom: 0; width: 100%; height: 10px; background: #222; }
+        #progress-fill { height: 100%; width: 0%; background: var(--neon); box-shadow: 0 0 15px var(--neon); transition: 0.3s; }
+        
+        #death-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 300; flex-direction: column; align-items: center; justify-content: center; }
+        .btn-main { background: var(--cyan); color: black; border: none; padding: 15px 40px; border-radius: 40px; font-size: 20px; font-weight: bold; box-shadow: 0 0 20px var(--cyan); margin-top: 20px; }
     </style>
 </head>
-<body onclick="startMusic()">
+<body class="bg-neon-1">
 
-    <audio id="bgMusic" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" type="audio/mpeg">
-    </audio>
+    <div id="death-screen">
+        <h1 style="color:var(--pink); font-size: 40px; text-shadow: 0 0 20px var(--pink);">NEON OVERLOAD</h1>
+        <button class="btn-main" onclick="restartGame()">ИГРАТЬ СНОВА</button>
+    </div>
 
     <div id="game-screen">
         <div id="ui-top">
             <div id="money-display">0</div>
-            <div style="font-size:12px; color:var(--neon)">УРОВЕНЬ <span id="lvl">1</span></div>
-        </div>
-        <button id="shop-open-btn" onclick="openShop()">🛒 МАГАЗИН</button>
-        <div id="bottom-line"><div id="progress-fill"></div></div>
-    </div>
-
-    <div id="shop-page">
-        <div class="shop-header">
-            <div class="shop-title">УЛУЧШЕНИЯ</div>
-            <div class="shop-bal-big">БАЛАНС: <span id="shop-money">0</span> 🍀</div>
+            <div id="hp-display">❤️❤️❤️</div>
+            <div style="color:var(--cyan); font-size: 12px;">LEVEL <span id="lvl">1</span></div>
         </div>
         
-        <div class="upgrade-list">
-            <div class="upgrade-card">
-                <div class="up-text">
-                    <span class="up-name">💪 СИЛА КЛИКА</span>
-                    <span class="up-desc">Больше очков за клик</span>
-                    <span class="up-price">Цена: <span id="c-pwr">20</span></span>
-                </div>
-                <button class="buy-btn" onclick="buy('pwr')">КУПИТЬ</button>
-            </div>
-            <div class="upgrade-card">
-                <div class="up-text">
-                    <span class="up-name">🤖 АВТО-РОБОТ</span>
-                    <span class="up-desc">Собирает сам каждую сек.</span>
-                    <span class="up-price">Цена: <span id="c-auto">50</span></span>
-                </div>
-                <button class="buy-btn" onclick="buy('auto')">КУПИТЬ</button>
-            </div>
-            <div class="upgrade-card">
-                <div class="up-text">
-                    <span class="up-name">🍀 ПЛОДОВИТОСТЬ</span>
-                    <span class="up-desc">Больше клеверов сразу</span>
-                    <span class="up-price">Цена: <span id="c-mult">100</span></span>
-                </div>
-                <button class="buy-btn" onclick="buy('mult')">КУПИТЬ</button>
-            </div>
-            <div class="upgrade-card">
-                <div class="up-text">
-                    <span class="up-name">⏱ ЗАМЕДЛЕНИЕ</span>
-                    <span class="up-desc">Падают медленнее</span>
-                    <span class="up-price">Цена: <span id="c-slow">150</span></span>
-                </div>
-                <button class="buy-btn" onclick="buy('slow')">КУПИТЬ</button>
-            </div>
+        <div id="nav-btns">
+            <button class="nav-btn" onclick="openPage('shop-page')">SHOP</button>
+            <button class="nav-btn" style="border-color: var(--cyan); text-shadow: 0 0 5px var(--cyan); box-shadow: 0 0 10px var(--cyan);" onclick="openPage('quest-page')">QUESTS</button>
         </div>
-        <button class="exit-btn" onclick="closeShop()">В ИГРУ</button>
+        <div id="progress-container"><div id="progress-fill"></div></div>
     </div>
 
-    <div id="countdown">5</div>
+    <div id="shop-page" class="full-page">
+        <h1 style="color:var(--pink)">CYBER SHOP</h1>
+        <div class="quest-card">
+            <div><b>CLICK POWER</b><br><small>Lvl: <span id="p-lvl">1</span></small></div>
+            <button onclick="buy('pwr')" style="padding:10px; background:var(--pink); border:none; border-radius:8px; font-weight:bold;">COST: <span id="c-pwr">20</span></button>
+        </div>
+        <button class="btn-main" style="background:#555" onclick="closePage()">BACK</button>
+    </div>
+
+    <div id="quest-page" class="full-page">
+        <h1 style="color:var(--cyan)">DAILY MISSIONS</h1>
+        <div id="quest-list" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+        <button class="btn-main" style="background:#555" onclick="closePage()">BACK</button>
+    </div>
 
     <script>
-        let music = document.getElementById('bgMusic');
-        let musicStarted = true;
-
-        function startMusic() {
-            if (!musicStarted) {
-                music.volume = 1.2;
-                music.play();
-                musicStarted = true;
-            }
-        }
-
+        const backgrounds = ["bg-neon-1", "bg-neon-2", "bg-neon-3", "bg-neon-4"];
+        
         let data = {
-            bal: parseInt(localStorage.getItem('cl_bal')) || 0,
-            lvl: parseInt(localStorage.getItem('cl_lvl')) || 1,
-            pwr: parseInt(localStorage.getItem('cl_pwr')) || 1,
-            auto: parseInt(localStorage.getItem('cl_auto')) || 0,
-            mult: parseInt(localStorage.getItem('cl_mult')) || 1,
-            slow: parseInt(localStorage.getItem('cl_slow')) || 0
+            bal: parseInt(localStorage.getItem('n_bal')) || 0,
+            lvl: parseInt(localStorage.getItem('n_lvl')) || 1,
+            pwr: parseInt(localStorage.getItem('n_pwr')) || 1,
+            lastDate: localStorage.getItem('n_date') || "",
+            qDone: JSON.parse(localStorage.getItem('n_qdone')) || []
         };
 
-        let caught = 0, isPaused = false;
-        function getNeed() { return 50 + (data.lvl * 50); }
-        let need = getNeed();
+        // ПРОВЕРКА НОВОГО ДНЯ
+        const today = new Date().toDateString();
+        if (data.lastDate !== today) {
+            data.lastDate = today;
+            data.qDone = []; // Сбрасываем выполненные задания каждый день
+            localStorage.setItem('n_date', today);
+            localStorage.setItem('n_qdone', "[]");
+        }
+
+        // ГЕНЕРАЦИЯ ЗАДАНИЙ НА ОСНОВЕ ДАТЫ
+        function getDailyQuests() {
+            const seed = new Date().getDate(); // Число месяца
+            const allPossible = [
+                { id: 1, txt: "Накопить 3,000", goal: () => data.bal >= 3000, prize: 1500 },
+                { id: 2, txt: "Сила уровня 8", goal: () => data.pwr >= 8, prize: 5000 },
+                { id: 3, txt: "Достичь 5 уровня", goal: () => data.lvl >= 5, prize: 10000 },
+                { id: 4, txt: "Накопить 15,000", goal: () => data.bal >= 15000, prize: 7000 },
+                { id: 5, txt: "Сила уровня 15", goal: () => data.pwr >= 15, prize: 20000 },
+                { id: 6, txt: "Достичь 12 уровня", goal: () => data.lvl >= 12, prize: 30000 },
+                { id: 7, txt: "Накопить 50,000", goal: () => data.bal >= 50000, prize: 25000 },
+                { id: 8, txt: "Сила уровня 25", goal: () => data.pwr >= 25, prize: 60000 }
+            ];
+            // Выбираем 5 заданий, используя seed
+            return allPossible.slice(seed % 3, (seed % 3) + 5);
+        }
+
+        let hp = 3, isPaused = false, caught = 0;
+        let need = 200 + (data.lvl * 100);
 
         function updateUI() {
-            document.getElementById('money-display').innerText = Math.floor(data.bal);
-            document.getElementById('shop-money').innerText = Math.floor(data.bal);
+            document.body.className = backgrounds[(data.lvl - 1) % backgrounds.length];
+            document.getElementById('money-display').innerText = Math.floor(data.bal).toLocaleString();
+            document.getElementById('hp-display').innerText = "❤️".repeat(hp);
             document.getElementById('lvl').innerText = data.lvl;
-            document.getElementById('c-pwr').innerText = Math.floor(20 * Math.pow(1.6, data.pwr - 1));
-            document.getElementById('c-auto').innerText = Math.floor(50 * Math.pow(1.7, data.auto));
-            document.getElementById('c-mult').innerText = Math.floor(100 * Math.pow(2, data.mult - 1));
-            document.getElementById('c-slow').innerText = Math.floor(150 * Math.pow(1.8, data.slow));
+            document.getElementById('p-lvl').innerText = data.pwr;
+            document.getElementById('c-pwr').innerText = Math.floor(20 * Math.pow(1.7, data.pwr - 1));
             document.getElementById('progress-fill').style.width = Math.min(100, (caught/need)*100) + "%";
+            renderQuests();
         }
 
-        function openShop() { 
-            isPaused = true; 
-            document.getElementById('shop-page').style.display = 'flex'; 
-            music.volume = 0.15; // Приглушаем музыку
-            updateUI(); 
+        function renderQuests() {
+            const list = document.getElementById('quest-list');
+            list.innerHTML = "";
+            const daily = getDailyQuests();
+            daily.forEach(q => {
+                const done = data.qDone.includes(q.id);
+                const canClaim = q.goal() && !done;
+                list.innerHTML += `
+                    <div class="quest-card ${done ? 'quest-done' : ''}">
+                        <div><b>${q.txt}</b><br><small style="color:var(--gold)">+${q.prize} 🍀</small></div>
+                        <button onclick="claim(${q.id}, ${q.prize})" ${!canClaim ? 'disabled' : ''} 
+                        style="padding:10px; background:${done?'#444':'var(--cyan)'}; border:none; border-radius:8px; font-weight:bold;">
+                            ${done ? 'DONE' : 'CLAIM'}
+                        </button>
+                    </div>`;
+            });
         }
 
-        function closeShop() { 
-            document.getElementById('shop-page').style.display = 'none'; 
-            startCountdown(); 
+        function claim(id, prize) {
+            data.bal += prize;
+            data.qDone.push(id);
+            save(); updateUI();
         }
 
-        function startCountdown() {
-            let count = 5;
-            music.volume = 0.1; // Совсем тихо во время отсчета
-            const display = document.getElementById('countdown');
-            display.style.display = 'block'; display.innerText = count;
-            const timer = setInterval(() => {
-                count--;
-                if (count > 0) display.innerText = count;
-                else { 
-                    clearInterval(timer); 
-                    display.style.display = 'none'; 
-                    isPaused = false; 
-                    music.volume = 0.4; // Возвращаем громкость
-                }
-            }, 1000);
+        function restartGame() {
+            hp = 3; caught = 0; isPaused = false;
+            document.getElementById('death-screen').style.display = 'none';
+            updateUI();
         }
 
-        function buy(type) {
-            let cost = 0;
-            if (type === 'pwr') cost = Math.floor(20 * Math.pow(1.6, data.pwr - 1));
-            if (type === 'auto') cost = Math.floor(50 * Math.pow(1.7, data.auto));
-            if (type === 'mult') cost = Math.floor(100 * Math.pow(2, data.mult - 1));
-            if (type === 'slow') cost = Math.floor(150 * Math.pow(1.8, data.slow));
-
-            if (data.bal >= cost) {
-                data.bal -= cost; data[type]++;
-                for(let key in data) localStorage.setItem('cl_'+key, data[key]);
-                updateUI();
-            }
+        function loseHp() {
+            if(isPaused) return;
+            hp--; updateUI();
+            if(hp <= 0) { isPaused = true; document.getElementById('death-screen').style.display = 'flex'; }
         }
 
         function createClover() {
-            if (isPaused || caught >= need) return;
+            if(isPaused) return;
             const c = document.createElement('div');
             c.className = 'clover'; c.innerHTML = '🍀';
             c.style.left = Math.random() * (window.innerWidth - 80) + 40 + 'px';
             c.style.top = '-80px';
             document.body.appendChild(c);
-            let y = -80;
-            let speed = (3.5 + (data.lvl * 0.1)) - (data.slow * 0.3);
+
+            let y = -80, speed = 4 + (data.lvl * 0.1);
             const fly = setInterval(() => {
-                if (!isPaused) {
-                    y += speed;
-                    c.style.transform = `translateY(${y + 80}px)`;
-                }
-                if (y > window.innerHeight) { clearInterval(fly); c.remove(); }
+                if(!isPaused) y += speed;
+                c.style.transform = `translateY(${y + 80}px)`;
+                if(y > window.innerHeight) { clearInterval(fly); c.remove(); loseHp(); }
             }, 16);
-            const hit = (e) => {
-                e.preventDefault(); if (c.dataset.h || isPaused) return; 
-                c.dataset.h = "true"; clearInterval(fly); c.remove();
+
+            c.onclick = () => {
+                if(isPaused) return;
+                clearInterval(fly);
                 data.bal += data.pwr; caught += data.pwr;
-                if (caught >= need) { data.lvl++; caught = 0; need = getNeed(); localStorage.setItem('cl_lvl', data.lvl); }
-                localStorage.setItem('cl_bal', data.bal);
-                updateUI();
-            };
-            c.onclick = hit; c.addEventListener('touchstart', hit);
+                if(caught >= need) { data.lvl++; caught = 0; need = 200 + (data.lvl * 100); }
+                c.remove(); save(); updateUI();
+            }
         }
 
-        setInterval(() => { if (!isPaused && caught < need) { for(let i=0; i < data.mult; i++) setTimeout(createClover, i * 200); } }, 1000);
-        setInterval(() => { if (!isPaused && data.auto > 0 && caught < need) { data.bal += data.auto; caught += data.auto; updateUI(); } }, 1000);
+        function openPage(id) { isPaused = true; document.getElementById(id).style.display = 'flex'; updateUI(); }
+        function closePage() { document.querySelectorAll('.full-page').forEach(p => p.style.display='none'); isPaused = false; }
+        function buy(t) { let cost = Math.floor(20 * Math.pow(1.7, data.pwr - 1)); if(data.bal>=cost){data.bal-=cost; data.pwr++; save(); updateUI();} }
+        function save() { 
+            localStorage.setItem('n_bal', data.bal); 
+            localStorage.setItem('n_lvl', data.lvl); 
+            localStorage.setItem('n_pwr', data.pwr); 
+            localStorage.setItem('n_qdone', JSON.stringify(data.qDone));
+        }
+
+        setInterval(() => { if(!isPaused) createClover(); }, 850);
         updateUI();
     </script>
 </body>
