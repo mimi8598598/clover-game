@@ -3,156 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Quest OS</title>
+    <title>Clover: Risk & Skill</title>
     <style>
-        :root { --gold: #ffd700; --bg: #050a05; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        :root { --neon: #4aff4a; --pink: #ff00ff; --gold: #ffd700; --red: #ff4444; }
+        body { margin: 0; color: white; font-family: 'Arial Black', sans-serif; overflow: hidden; height: 100vh; touch-action: none; background: #000; }
         
-        /* Игра */
-        #game-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .clover { position: absolute; font-size: 40px; cursor: pointer; z-index: 5; }
+        /* ЭФФЕКТ КОМБО */
+        .fever-bg { animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { 
+            0% { box-shadow: inset 0 0 50px rgba(74, 255, 74, 0.2); } 
+            100% { box-shadow: inset 0 0 150px rgba(74, 255, 74, 0.5); } 
+        }
 
-        /* Шапка */
-        #header { position: fixed; top: 10px; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
-        #bal-box { display: inline-block; pointer-events: auto; background: rgba(0,0,0,0.8); padding: 10px 25px; border-radius: 50px; border: 2px solid var(--gold); cursor: pointer; }
-        #bal-val { font-size: 28px; color: var(--gold); font-weight: bold; }
+        #ui-top { position: absolute; top: 15px; width: 100%; text-align: center; z-index: 20; pointer-events: none; }
+        #money-display { font-size: 45px; color: var(--gold); text-shadow: 0 0 20px var(--gold); }
+        #combo-tag { font-size: 18px; color: var(--neon); opacity: 0; transition: 0.3s; }
 
-        /* Окна */
-        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 70px); background: #000; z-index: 200; padding: 20px; box-sizing: border-box; }
-        .active { display: block; }
-        h2 { color: var(--gold); text-align: center; }
+        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 100; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; }
+        .shop-item { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; margin-bottom: 15px; width: 90%; border: 2px solid var(--pink); display: flex; justify-content: space-between; align-items: center; }
+        
+        .buy-btn { background: var(--pink); color: white; border: none; padding: 15px 25px; border-radius: 12px; font-weight: bold; }
+        .clover { position: absolute; font-size: 65px; z-index: 5; padding: 40px; margin: -40px; cursor: pointer; user-select: none; }
+        .bomb { filter: drop-shadow(0 0 20px var(--red)) hue-rotate(120deg); } /* Красный клевер */
+        .artifact { filter: drop-shadow(0 0 30px var(--cyan)); font-size: 40px; }
 
-        /* Поиск / Консоль в Настройках */
-        .console-input { width: 100%; padding: 15px; background: #111; border: 1px solid #333; color: #0f0; border-radius: 10px; font-family: monospace; margin-bottom: 10px; }
-        .card { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #222; }
+        #progress-container { position: absolute; bottom: 0; width: 100%; height: 12px; background: #111; }
+        #progress-fill { height: 100%; width: 0%; background: var(--neon); box-shadow: 0 0 20px var(--neon); }
 
-        /* Навигация */
-        #nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #0a0a0a; display: flex; z-index: 300; border-top: 1px solid #222; }
-        .nav-btn { flex: 1; text-align: center; padding-top: 15px; color: #555; cursor: pointer; font-size: 12px; }
-        .nav-btn.on { color: var(--gold); }
-
-        /* Пульт 5757 */
-        #admin { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: #111; border: 2px solid var(--gold); padding: 20px; border-radius: 20px; z-index: 1000; }
-        .adm-btn { width: 100%; padding: 12px; margin: 5px 0; background: #222; color: white; border: 1px solid #444; border-radius: 10px; cursor: pointer; }
+        #nav-btns { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 30; }
+        .nav-btn { background: rgba(0,0,0,0.8); color: white; border: 2px solid var(--neon); padding: 15px 35px; border-radius: 40px; font-weight: bold; }
     </style>
 </head>
-<body>
+<body id="main-body">
 
-    <div id="header">
-        <div id="bal-box" onclick="tryAdm()">🍀 <span id="bal-txt">0</span></div>
-    </div>
-
-    <div id="game-view" class="screen active"></div>
-
-    <div id="scr-bank" class="screen">
-        <h2>БАНК</h2>
-        <div class="card" style="text-align:center;">
-            <p>Баланс счета:</p>
-            <h1 style="color:var(--gold);">🍀 <span class="sync">0</span></h1>
+    <div id="game-screen">
+        <div id="ui-top">
+            <div id="money-display">0</div>
+            <div id="combo-tag">COMBO X2 🔥</div>
+            <div style="font-size:18px; margin-top:5px;">❤️ <span id="hp-val">3</span> | LVL <span id="lvl">1</span></div>
         </div>
-    </div>
-
-    <div id="scr-tasks" class="screen">
-        <h2>ЗАДАНИЯ</h2>
-        <div class="card">Подписаться на канал <button onclick="add(5000)" style="float:right;">+5k</button></div>
-    </div>
-
-    <div id="scr-set" class="screen">
-        <h2>НАСТРОЙКИ / ПОИСК</h2>
-        <input type="text" id="cmd-input" class="console-input" placeholder="Введите команду (например: give 1000)">
-        <button onclick="runCmd()" class="adm-btn" style="background:var(--gold); color:black;">ВЫПОЛНИТЬ</button>
-        <div class="card" style="margin-top:20px; font-size: 12px; color: #666;">
-            Доступные команды:<br>
-            • give [число] — выдать монеты<br>
-            • luck — включить удачу<br>
-            • rain — клеверный дождь
+        
+        <div id="nav-btns">
+            <button class="nav-btn" onclick="openPage('shop-page')">СИЛА</button>
+            <button class="nav-btn" style="border-color:var(--gold)" onclick="openPage('quest-page')">МИССИИ</button>
         </div>
+        <div id="progress-container"><div id="progress-fill"></div></div>
     </div>
 
-    <div id="admin">
-        <h3 style="text-align:center; color:gold;">АДМИН 5757</h3>
-        <button class="adm-btn" onclick="add(1000000)">💰 +1,000,000</button>
-        <button class="adm-btn" onclick="luckOn()">🍀 УДАЧА 35%</button>
-        <button class="adm-btn" style="background:red;" onclick="document.getElementById('admin').style.display='none'">ЗАКРЫТЬ</button>
+    <div id="shop-page" class="full-page">
+        <h1 style="color:var(--pink)">ПРОКАЧКА</h1>
+        <div class="shop-item">
+            <div><b>МОЩНЫЙ КЛИК</b><br><small>+50 силы</small></div>
+            <button class="buy-btn" id="btn-pwr" onclick="buyPwr()">0</button>
+        </div>
+        <button onclick="closePage()" style="margin-top:auto; color:white; background:none; border:1px solid #fff; padding:15px 50px; border-radius:30px;">НАЗАД</button>
     </div>
 
-    <div id="nav">
-        <div class="nav-btn on" onclick="nav('game-view', this)">🎮<br>Игра</div>
-        <div class="nav-btn" onclick="nav('scr-bank', this)">🏦<br>Банк</div>
-        <div class="nav-btn" onclick="nav('scr-tasks', this)">📋<br>Задания</div>
-        <div class="nav-btn" onclick="nav('scr-set', this)">⚙️<br>Настройки</div>
+    <div id="quest-page" class="full-page">
+        <h1 style="color:var(--gold)">МИССИИ</h1>
+        <div id="quest-list" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+        <button onclick="closePage()" style="margin-top:auto; color:white; background:none; border:1px solid #fff; padding:15px 50px; border-radius:30px;">НАЗАД</button>
     </div>
 
     <script>
-        let bal = parseInt(localStorage.getItem('clover_bal')) || 0;
-        let isLuck = false;
-        let admC = 0;
+        let data = {
+            bal: parseInt(localStorage.getItem('r_bal')) || 0,
+            lvl: 1,
+            pwr: parseInt(localStorage.getItem('r_pwr')) || 10,
+            qDone: JSON.parse(localStorage.getItem('r_qdone')) || []
+        };
 
-        function nav(id, el) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('on');
-        }
+        let hp = 3, isPaused = false, caught = 0, combo = 0, need = 500;
 
-        // РАБОТА С КОМАНДАМИ (ПОИСК)
-        function runCmd() {
-            let input = document.getElementById('cmd-input').value.split(' ');
-            let cmd = input[0].toLowerCase();
-            let val = parseInt(input[1]);
-
-            if (cmd === 'give' && val) {
-                add(val);
-                alert('Выдано ' + val + ' клеверов');
-            } else if (cmd === 'luck') {
-                luckOn();
-            } else if (cmd === 'rain') {
-                for(let i=0; i<30; i++) setTimeout(spawn, i*100);
-                alert('Клеверный дождь!');
+        function updateUI() {
+            let cost = Math.floor(10000 * Math.pow(3, (data.pwr-10)/50));
+            document.getElementById('money-display').innerText = Math.floor(data.bal).toLocaleString();
+            document.getElementById('hp-val').innerText = hp;
+            document.getElementById('lvl').innerText = data.lvl;
+            document.getElementById('btn-pwr').innerText = cost.toLocaleString();
+            document.getElementById('btn-pwr').disabled = data.bal < cost;
+            document.getElementById('progress-fill').style.width = Math.min(100, (caught/need)*100) + "%";
+            
+            const comboTag = document.getElementById('combo-tag');
+            if(combo >= 10) {
+                comboTag.style.opacity = 1;
+                document.getElementById('main-body').classList.add('fever-bg');
             } else {
-                alert('Команда не найдена');
+                comboTag.style.opacity = 0;
+                document.getElementById('main-body').classList.remove('fever-bg');
             }
-            document.getElementById('cmd-input').value = '';
+            renderQuests();
         }
 
-        function spawn() {
-            if (!document.getElementById('game-view').classList.contains('active')) return;
+        function createClover() {
+            if(isPaused) return;
             const c = document.createElement('div');
-            const gold = isLuck ? (Math.random() < 0.35) : (Math.random() < 0.05);
-            c.className = 'clover';
-            c.innerHTML = gold ? '🌟' : '🍀';
-            c.style.left = Math.random() * (window.innerWidth - 50) + 'px';
-            c.style.top = '-50px';
-            document.getElementById('game-view').appendChild(c);
+            let rand = Math.random();
+            let type = "normal";
 
-            let pos = -50;
-            let fall = setInterval(() => {
-                pos += 2;
-                c.style.top = pos + 'px';
-                if (pos > window.innerHeight) { clearInterval(fall); c.remove(); }
+            if (rand < 0.08) type = "bomb"; 
+            else if (rand < 0.12) type = "gold";
+            else if (rand < 0.14) type = "artifact";
+
+            c.className = 'clover';
+            if(type === "bomb") { c.innerHTML = '💣'; c.classList.add('bomb'); }
+            else if(type === "gold") { c.innerHTML = '📀'; }
+            else if(type === "artifact") { c.innerHTML = '💎'; c.classList.add('artifact'); }
+            else { c.innerHTML = '🍀'; }
+
+            c.style.left = Math.random() * (window.innerWidth - 80) + 40 + 'px';
+            c.style.top = '-80px';
+            document.body.appendChild(c);
+
+            let speed = (4 + (data.lvl * 0.4));
+            if(type === "artifact") speed *= 2.5;
+
+            let y = -80;
+            const fly = setInterval(() => {
+                if(!isPaused) y += speed;
+                c.style.transform = `translateY(${y + 80}px)`;
+                if(y > window.innerHeight) { 
+                    clearInterval(fly); c.remove(); 
+                    if(type === "normal") { hp--; combo = 0; updateUI(); if(hp<=0) location.reload(); }
+                }
             }, 16);
 
-            c.onclick = () => { clearInterval(fall); bal += gold ? 100 : 2; update(); c.remove(); };
-        }
-
-        function tryAdm() {
-            admC++;
-            if(admC >= 5) {
-                if(prompt("PASSWORD:") === "5757") document.getElementById('admin').style.display='block';
-                admC = 0;
+            c.onclick = () => {
+                clearInterval(fly);
+                if(type === "bomb") {
+                    data.bal = Math.floor(data.bal * 0.7); // Штраф 30% от всех денег!
+                    hp--; combo = 0;
+                    document.body.style.background = "red";
+                    setTimeout(() => document.body.style.background = "black", 100);
+                } else {
+                    let gain = data.pwr;
+                    if(combo >= 10) gain *= 2;
+                    if(type === "gold") gain *= 10;
+                    if(type === "artifact") gain *= 50;
+                    
+                    data.bal += gain; caught += gain;
+                    combo++;
+                    if(type === "gold" && hp < 3) hp++;
+                }
+                
+                if(caught >= need) { data.lvl++; caught = 0; need += 1000; }
+                c.remove(); save(); updateUI();
             }
         }
 
-        function add(n) { bal += n; update(); }
-        function luckOn() { isLuck = true; alert("УДАЧА ВКЛЮЧЕНА!"); }
-        function update() {
-            document.getElementById('bal-txt').innerText = bal.toLocaleString();
-            document.querySelectorAll('.sync').forEach(s => s.innerText = bal.toLocaleString());
-            localStorage.setItem('clover_bal', bal);
+        function buyPwr() {
+            let cost = Math.floor(10000 * Math.pow(3, (data.pwr-10)/50));
+            if (data.bal >= cost) { data.bal -= cost; data.pwr += 50; save(); updateUI(); }
         }
 
-        setInterval(() => { spawn(); spawn(); }, 1500);
-        update();
+        function renderQuests() {
+            const list = document.getElementById('quest-list');
+            list.innerHTML = "";
+            let qArr = [
+                { id: 401, txt: "Набить Комбо x10", goal: () => combo >= 10, prize: 50000 },
+                { id: 402, txt: "Собрать 2 млн", goal: () => data.bal >= 2000000, prize: 500000 }
+            ];
+            qArr.forEach(q => {
+                let done = data.qDone.includes(q.id);
+                list.innerHTML += `<div class="shop-item"><div>${q.txt}</div><button onclick="claim(${q.id},${q.prize})" ${(done||!q.goal())?'disabled':''} class="buy-btn">${done?'OK':'ВЗЯТЬ'}</button></div>`;
+            });
+        }
+
+        function claim(id, p) { data.bal += p; data.qDone.push(id); save(); updateUI(); }
+        function openPage(id) { isPaused = true; document.getElementById(id).style.display = 'flex'; updateUI(); }
+        function closePage() { document.querySelectorAll('.full-page').forEach(p => p.style.display='none'); isPaused = false; }
+        function save() { localStorage.setItem('r_bal', data.bal); localStorage.setItem('r_pwr', data.pwr); localStorage.setItem('r_qdone', JSON.stringify(data.qDone)); }
+
+        setInterval(() => { if(!isPaused) createClover(); }, 800);
+        updateUI();
     </script>
 </body>
 </html>
