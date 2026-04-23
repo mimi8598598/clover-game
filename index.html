@@ -3,157 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover App 2.0</title>
+    <title>Clover Game App</title>
     <style>
-        :root { --gold: #ffd700; --panel: #111; }
+        :root { --gold: #ffd700; --panel: #1a1a1a; }
         body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; }
         
         /* Игра */
-        #game-area { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: radial-gradient(circle, #0a250a, #000); }
-        .clover { position: absolute; font-size: 45px; cursor: pointer; z-index: 5; }
+        #game-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: radial-gradient(circle, #0a250a, #000); }
+        .clover { position: absolute; font-size: 45px; cursor: pointer; z-index: 5; transition: transform 0.1s; }
         .gold { filter: drop-shadow(0 0 15px gold); }
 
         /* Шапка */
-        #top-bar { position: fixed; top: 0; width: 100%; padding: 20px 0; text-align: center; z-index: 100; pointer-events: none; }
-        #main-bal { display: inline-block; pointer-events: auto; font-size: 35px; color: var(--gold); font-weight: bold; text-shadow: 0 0 15px gold; cursor: pointer; background: rgba(0,0,0,0.6); padding: 5px 20px; border-radius: 30px; border: 1px solid var(--gold); }
+        #header { position: fixed; top: 0; width: 100%; padding: 20px 0; text-align: center; z-index: 100; pointer-events: none; }
+        #balance-display { display: inline-block; pointer-events: auto; font-size: 32px; color: var(--gold); font-weight: bold; text-shadow: 0 0 15px gold; cursor: pointer; background: rgba(0,0,0,0.8); padding: 8px 25px; border-radius: 40px; border: 2px solid var(--gold); }
 
         /* Экраны меню */
-        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 70px); background: #000; z-index: 200; padding: 25px; box-sizing: border-box; overflow-y: auto; }
+        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 80px); background: #000; z-index: 200; padding: 25px; box-sizing: border-box; overflow-y: auto; }
         .active-screen { display: block; }
-        h2 { color: var(--gold); text-align: center; font-size: 28px; margin-bottom: 25px; }
+        h2 { color: var(--gold); text-align: center; font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid #222; padding-bottom: 10px; }
 
-        /* Карточки */
-        .card { background: var(--panel); border-radius: 15px; padding: 18px; margin-bottom: 12px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
-        .btn-action { background: var(--gold); color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; }
+        /* Карточки разделов */
+        .card { background: var(--panel); border-radius: 18px; padding: 20px; margin-bottom: 15px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .btn { background: var(--gold); color: black; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; }
 
         /* Навигация */
-        #navbar { position: fixed; bottom: 0; width: 100%; height: 75px; background: #0a0a0a; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #333; z-index: 300; }
-        .nav-link { text-align: center; color: #666; font-size: 11px; cursor: pointer; text-decoration: none; flex: 1; }
-        .nav-link.active { color: var(--gold); }
-        .nav-link div { font-size: 26px; margin-bottom: 3px; }
+        #navbar { position: fixed; bottom: 0; width: 100%; height: 80px; background: #0d0d0d; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 300; }
+        .nav-item { text-align: center; color: #555; font-size: 11px; cursor: pointer; flex: 1; }
+        .nav-item.active { color: var(--gold); }
+        .nav-item div { font-size: 28px; margin-bottom: 4px; }
 
-        /* Админ-панель */
-        #adm { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: #1a1a1a; border: 2px solid var(--gold); border-radius: 20px; padding: 20px; z-index: 1000; }
-        .adm-btn { width: 100%; margin: 6px 0; padding: 12px; background: #333; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; }
+        /* Админка */
+        #admin-box { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: #111; border: 2px solid var(--gold); border-radius: 25px; padding: 25px; z-index: 1000; box-shadow: 0 0 100px #000; }
+        .adm-btn { width: 100%; margin: 8px 0; padding: 14px; background: #222; color: white; border: 1px solid #444; border-radius: 12px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="top-bar">
-        <div id="main-bal" onclick="checkAdm()">🍀 <span id="val">0</span></div>
+    <div id="header">
+        <div id="balance-display" onclick="admTry()">🍀 <span id="bal-val">0</span></div>
     </div>
 
-    <div id="game-area"></div>
+    <div id="game-view"></div>
 
     <div id="scr-bank" class="screen">
         <h2>БАНК</h2>
         <div class="card" style="flex-direction: column; text-align: center;">
-            <span style="color: #888;">Баланс счета</span>
-            <span style="font-size: 32px; color: var(--gold); margin: 10px 0;">🍀 <span class="sync">0</span></span>
-            <button class="btn-action" style="width: 100%; background: #222; color: #444;">ВЫВЕСТИ (ОТ 1МЛН)</button>
+            <span style="color: #666;">Ваш капитал:</span>
+            <span style="font-size: 35px; color: var(--gold); margin: 15px 0;">🍀 <span class="sync-bal">0</span></span>
+            <button class="btn" style="width: 100%; background: #222; color: #444;">ВЫВОД (ОТ 1МЛН)</button>
         </div>
         <div class="card">
-            <div><b>Лимит клика</b><br><small style="color:#555;">Текущий: 2 🍀</small></div>
-            <button class="btn-action">УЛУЧШИТЬ</button>
+            <div><b>Прибыль за клик</b><br><small>Текущая: +2 🍀</small></div>
+            <button class="btn">UPGRADE</button>
         </div>
     </div>
 
     <div id="scr-tasks" class="screen">
         <h2>ЗАДАНИЯ</h2>
         <div class="card">
-            <div><b>Подписка</b><br><small>+5,000 🍀</small></div>
-            <button class="btn-action" onclick="claim(5000)">ВЗЯТЬ</button>
+            <div><b>Подписка на ТГ</b><br><small>+10,000 🍀</small></div>
+            <button class="btn" onclick="getGift(10000)">ВЗЯТЬ</button>
         </div>
         <div class="card">
-            <div><b>Смотреть рекламу</b><br><small>+2,500 🍀</small></div>
-            <button class="btn-action" onclick="claim(2500)">СМОТРЕТЬ</button>
-        </div>
-        <div class="card">
-            <div><b>Друзья (0/3)</b><br><small>+15,000 🍀</small></div>
-            <button class="btn-action" onclick="claim(15000)">ПРОВЕРИТЬ</button>
+            <div><b>Бонус дня</b><br><small>+2,500 🍀</small></div>
+            <button class="btn" onclick="getGift(2500)">ВЗЯТЬ</button>
         </div>
     </div>
 
-    <div id="scr-set" class="screen">
+    <div id="scr-settings" class="screen">
         <h2>НАСТРОЙКИ</h2>
-        <div class="card"><span>Уведомления</span><button class="btn-action">ВКЛ</button></div>
-        <div class="card"><span>Музыка</span><button class="btn-action">ВЫКЛ</button></div>
-        <div class="card"><span>Сменить язык</span><button class="btn-action">РУ</button></div>
+        <div class="card"><span>Звук</span><button class="btn">ВКЛ</button></div>
+        <div class="card"><span>Язык</span><button class="btn">РУ</button></div>
+        <p style="text-align: center; color: #333; margin-top: 40px;">v2.5 ADMIN EDITION</p>
     </div>
 
-    <div id="adm">
-        <h3 style="text-align:center; color:gold;">АДМИН 5757</h3>
-        <button class="adm-btn" onclick="bal+=1000000;upd()">💰 +1,000,000 🍀</button>
-        <button class="adm-btn" onclick="luck=true;alert('Удача 35%!')">🍀 ВКЛ. УДАЧУ</button>
-        <button class="adm-btn" style="background:#500;" onclick="document.getElementById('adm').style.display='none'">ЗАКРЫТЬ</button>
+    <div id="admin-box">
+        <h3 style="text-align:center; color:gold; margin-top:0;">АДМИН 5757</h3>
+        <button class="adm-btn" onclick="add1M()">💰 +1,000,000 🍀</button>
+        <button class="adm-btn" onclick="turnLuck()">🍀 УДАЧА 35% (ВКЛ)</button>
+        <button class="adm-btn" style="background:#500;" onclick="document.getElementById('admin-box').style.display='none'">ЗАКРЫТЬ</button>
     </div>
 
     <div id="navbar">
-        <div class="nav-link active" onclick="nav('game')"><div>🎮</div>Игра</div>
-        <div class="nav-link" onclick="nav('bank')"><div>🏦</div>Банк</div>
-        <div class="nav-link" onclick="nav('tasks')"><div>📋</div>Задания</div>
-        <div class="nav-link" onclick="nav('set')"><div>⚙️</div>Настройки</div>
+        <div class="nav-item active" onclick="go('game')"><div>🎮</div>Игра</div>
+        <div class="nav-item" onclick="go('bank')"><div>🏦</div>Банк</div>
+        <div class="nav-item" onclick="go('tasks')"><div>📋</div>Задания</div>
+        <div class="nav-item" onclick="go('settings')"><div>⚙️</div>Настройки</div>
     </div>
 
     <script>
-        let bal = parseInt(localStorage.getItem('clover_bal')) || 0;
-        let luck = false;
-        let admC = 0;
+        let balance = parseInt(localStorage.getItem('c_bal')) || 0;
+        let isLuck = false;
+        let aClicks = 0;
 
-        function nav(name) {
+        function go(name) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             if(name !== 'game') document.getElementById('scr-' + name).classList.add('active-screen');
             event.currentTarget.classList.add('active');
         }
 
-        function spawn() {
-            const area = document.getElementById('game-area');
+        function create() {
+            const world = document.getElementById('game-view');
             const c = document.createElement('div');
             const roll = Math.random() * 100;
-            const isG = luck ? (roll < 35) : (roll < 5);
+            const gold = isLuck ? (roll < 35) : (roll < 5);
             
-            c.className = 'clover' + (isG ? ' gold' : '');
-            c.innerHTML = isG ? '🌟' : '🍀';
+            c.className = 'clover' + (gold ? ' gold' : '');
+            c.innerHTML = gold ? '🌟' : '🍀';
             c.style.left = Math.random() * (window.innerWidth - 60) + 'px';
             c.style.top = '-60px';
-            area.appendChild(c);
+            world.appendChild(c);
 
-            let pos = -60;
-            let speed = 1.4; // Твоя медленная скорость
+            let y = -60;
             let fall = setInterval(() => {
-                pos += speed;
-                c.style.top = pos + 'px';
-                if(pos > window.innerHeight) { clearInterval(fall); c.remove(); }
+                y += 1.5; // Медленная скорость
+                c.style.top = y + 'px';
+                if(y > window.innerHeight) { clearInterval(fall); c.remove(); }
             }, 16);
 
             c.onclick = () => {
                 clearInterval(fall);
-                bal += isG ? 100 : 2; // +2 за клик
-                upd();
+                balance += gold ? 100 : 2; // +2 за обычный клик
+                update();
                 c.remove();
             };
         }
 
-        function checkAdm() {
-            admC++;
-            if(admC >= 5) {
-                if(prompt("КОД:") === "5757") document.getElementById('adm').style.display='block';
-                admC = 0;
+        function admTry() {
+            aClicks++;
+            if(aClicks >= 5) {
+                if(prompt("PASSWORD:") === "5757") document.getElementById('admin-box').style.display='block';
+                aClicks = 0;
             }
         }
 
-        function claim(r) { bal += r; upd(); alert("Начислено!"); }
+        function add1M() { balance += 1000000; update(); }
+        function turnLuck() { isLuck = true; alert("Шанс 35% активирован!"); }
+        function getGift(n) { balance += n; update(); alert("Получено!"); }
 
-        function upd() {
-            document.getElementById('val').innerText = bal.toLocaleString();
-            document.querySelectorAll('.sync').forEach(s => s.innerText = bal.toLocaleString());
-            localStorage.setItem('clover_bal', bal);
+        function update() {
+            document.getElementById('bal-val').innerText = balance.toLocaleString();
+            document.querySelectorAll('.sync-bal').forEach(s => s.innerText = balance.toLocaleString());
+            localStorage.setItem('c_bal', balance);
         }
 
-        // Спавним по 2 клевера
-        setInterval(() => { spawn(); spawn(); }, 1300);
-        upd();
+        // Спавн по 2 клевера
+        setInterval(() => { create(); create(); }, 1400);
+        update();
     </script>
 </body>
 </html>
