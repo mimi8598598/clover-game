@@ -3,80 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Game: Pro Edition</title>
+    <title>Clover Quest</title>
     <style>
-        :root { --gold: #ffd700; }
-        body { margin: 0; background: radial-gradient(circle, #0a1a0a, #000); color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        :root { --gold: #ffd700; --green: #2ecc71; }
+        body { margin: 0; background: radial-gradient(circle, #0a1a0a, #000); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; }
         
-        /* Экран игры */
-        #game-container { width: 100vw; height: 100vh; position: relative; }
-        #balance-ui { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); font-size: 35px; color: var(--gold); text-shadow: 0 0 15px gold; z-index: 10; cursor: pointer; text-align: center; }
+        /* Фон и интерфейс */
+        #game-box { width: 100vw; height: 100vh; position: relative; }
+        #top-ui { position: fixed; top: 20px; width: 100%; text-align: center; z-index: 10; pointer-events: none; }
+        #score-container { display: inline-block; pointer-events: auto; cursor: pointer; }
+        #balance { font-size: 42px; font-weight: bold; color: var(--gold); text-shadow: 0 0 20px gold; }
         
         /* Клеверы */
-        .clover { position: absolute; font-size: 40px; cursor: pointer; user-select: none; transition: transform 0.1s; }
-        .gold-clover { filter: drop-shadow(0 0 10px gold); animation: glow 1s infinite alternate; }
-        @keyframes glow { from { opacity: 0.8; } to { opacity: 1; transform: scale(1.2); } }
+        .clover { position: absolute; font-size: 45px; cursor: pointer; user-select: none; z-index: 5; transition: transform 0.1s; }
+        .gold { filter: drop-shadow(0 0 15px gold); animation: pulse 0.8s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
 
-        /* Админка */
-        #admin-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: #111; border: 2px solid var(--gold); border-radius: 20px; padding: 20px; z-index: 1000; box-shadow: 0 0 50px #000; }
-        .adm-btn { width: 100%; margin: 5px 0; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 10px; text-align: left; font-weight: bold; font-size: 14px; }
-        
-        /* Лидерборд */
-        #lb-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; align-items: center; justify-content: center; }
-        .lb-box { width: 85%; background: #111; border: 1px solid var(--gold); border-radius: 15px; padding: 20px; max-width: 350px; }
+        /* Админка (РУ) */
+        #admin-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; background: rgba(17,17,17,0.95); border: 2px solid var(--gold); border-radius: 25px; padding: 20px; z-index: 1000; box-shadow: 0 0 50px #000; backdrop-filter: blur(10px); }
+        .adm-btn { width: 100%; margin: 8px 0; padding: 14px; background: #222; border: 1px solid #444; color: white; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .adm-btn:active { background: var(--gold); color: black; }
+
+        /* Уведомления */
+        #notice { position: fixed; bottom: 50px; width: 100%; text-align: center; color: var(--gold); font-weight: bold; font-size: 18px; z-index: 100; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="balance-ui" onclick="adminClick()">
-        🍀 <span id="val">0</span>
-        <div style="font-size: 10px; color: #444;">ID: 5757-ADMIN</div>
+<div id="game-box">
+    <div id="top-ui">
+        <div id="score-container" onclick="handleAdminEntry()">
+            <span id="balance">🍀 0</span>
+            <div style="font-size: 12px; color: #555; margin-top: 5px;">Нажми 5 раз для админки</div>
+        </div>
     </div>
-    <button onclick="toggleLB()" style="position:fixed; top:20px; right:20px; font-size:30px; background:none; border:none; z-index:100;">🏆</button>
+    <div id="notice"></div>
 </div>
 
 <div id="admin-panel">
-    <h3 style="text-align:center; color:var(--gold); margin:0 0 10px 0;">АДМИН-ПУЛЬТ</h3>
-    <button class="adm-btn" onclick="qCmd('give')">💰 ВЫДАТЬ ДЕНЬГИ МНЕ</button>
-    <button class="adm-btn" onclick="qCmd('to')">🎁 ПЕРЕВЕСТИ ИГРОКУ</button>
-    <button class="adm-btn" onclick="qCmd('ghost')">👻 ПРИЗРАК (СКРЫТЬ МЕНЯ)</button>
-    <button class="adm-btn" onclick="qCmd('luck')">🍀 УДАЧА x2 (35% ШАНС)</button>
-    <button class="adm-btn" onclick="qCmd('say')">📢 ОБЪЯВЛЕНИЕ ВСЕМ</button>
-    <button class="adm-btn" onclick="qCmd('rain')">🌧️ КЛЕВЕРНЫЙ ДОЖДЬ</button>
-    <button onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; margin-top:10px; background:red; color:white; border:none; padding:10px; border-radius:10px;">ЗАКРЫТЬ</button>
-</div>
-
-<div id="lb-modal">
-    <div class="lb-box">
-        <h3 style="text-align:center; color:var(--gold);">ТОП ИГРОКОВ</h3>
-        <div id="lb-list" style="max-height: 300px; overflow-y: auto;"></div>
-        <button onclick="toggleLB()" style="width:100%; padding:10px; margin-top:10px; background:var(--gold); border:none; border-radius:10px;">ВЕРНУТЬСЯ</button>
-    </div>
+    <h3 style="text-align:center; color:var(--gold); margin:0 0 15px 0; letter-spacing: 2px;">ПУЛЬТ УПРАВЛЕНИЯ</h3>
+    <button class="adm-btn" onclick="adminCmd('money')">💰 ВЫДАТЬ СЕБЕ ДЕНЬГИ</button>
+    <button class="adm-btn" onclick="adminCmd('luck')">🍀 УДАЧА x2 (35% ШАНС)</button>
+    <button class="adm-btn" onclick="adminCmd('ghost')">👻 РЕЖИМ ПРИЗРАКА</button>
+    <button class="adm-btn" onclick="adminCmd('say')">📢 ОБЪЯВЛЕНИЕ ВСЕМ</button>
+    <button onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; margin-top:15px; background:#c0392b; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold;">ЗАКРЫТЬ</button>
 </div>
 
 <script>
-    let balance = parseInt(localStorage.getItem('user_balance')) || 0;
-    let isAdminInvisible = localStorage.getItem('admin_ghost_mode') === 'true';
+    let balance = parseInt(localStorage.getItem('clover_bal')) || 0;
     let timeInGame = 0;
-    let isLuckEvent = false;
-    let aClicks = 0;
+    let isLuckX2 = false;
+    let clickCount = 0;
 
-    // --- ЛОГИКА ПАДЕНИЯ КЛЕВЕРОВ ---
-    function spawnClover() {
+    // --- ЛОГИКА ИГРЫ ---
+    function createClover() {
         const clover = document.createElement('div');
-        const isGold = Math.random() * 100 <= (isLuckEvent ? (timeInGame >= 15 ? 35 : 5) : (timeInGame >= 30 ? 15 : 1));
-        
-        clover.className = 'clover' + (isGold ? ' gold-clover' : '');
-        clover.innerHTML = isGold ? '🌟' : '🍀';
-        clover.style.left = Math.random() * (window.innerWidth - 50) + 'px';
-        clover.style.top = '-50px';
-        
-        document.getElementById('game-container').appendChild(clover);
+        // Шансы по твоим правилам (35% если удача и 15 мин в игре)
+        const chance = Math.random() * 100;
+        const isGold = isLuckX2 ? (chance < 35) : (timeInGame > 30 && chance < 15);
 
-        let pos = -50;
+        clover.className = 'clover' + (isGold ? ' gold' : '');
+        clover.innerHTML = isGold ? '🌟' : '🍀';
+        clover.style.left = Math.random() * (window.innerWidth - 60) + 'px';
+        clover.style.top = '-60px';
+        document.getElementById('game-box').appendChild(clover);
+
         let speed = Math.random() * 2 + 2;
-        
+        let pos = -60;
+
         let fall = setInterval(() => {
             pos += speed;
             clover.style.top = pos + 'px';
@@ -84,62 +78,55 @@
                 clearInterval(fall);
                 clover.remove();
             }
-        }, 20);
+        }, 16);
 
         clover.onclick = () => {
             clearInterval(fall);
-            let reward = isGold ? 1000 : 10;
-            balance += reward;
-            updateUI();
-            clover.remove();
+            balance += isGold ? 1000 : 10;
+            updateDisplay();
+            clover.style.transform = 'scale(1.5)';
+            setTimeout(() => clover.remove(), 100);
         };
     }
 
-    setInterval(spawnClover, 800); // Спавн каждые 0.8 сек
+    // Спавн клеверов
+    setInterval(createClover, 900);
     setInterval(() => { timeInGame++; }, 60000);
 
-    // --- АДМИН-ЛОГИКА ---
-    function adminClick() {
-        aClicks++;
-        if(aClicks >= 5) {
-            if(prompt("ВВЕДИТЕ КОД:") === "5757") document.getElementById('admin-panel').style.display='block';
-            aClicks = 0;
+    // --- АДМИНКА (5757) ---
+    function handleAdminEntry() {
+        clickCount++;
+        if (clickCount >= 5) {
+            if (prompt("Введите секретный код:") === "5757") {
+                document.getElementById('admin-panel').style.display = 'block';
+            }
+            clickCount = 0;
         }
     }
 
-    function qCmd(t) {
-        if (t === 'give') balance += parseInt(prompt("Сколько?") || 0);
-        if (t === 'luck') { 
-            isLuckEvent = true; 
-            alert("Удача 2x включена на 5 минут!"); 
-            setTimeout(() => isLuckEvent = false, 300000); 
+    function adminCmd(type) {
+        if (type === 'money') {
+            balance += parseInt(prompt("Сколько начислить?") || 0);
         }
-        if (t === 'ghost') { 
-            isAdminInvisible = !isAdminInvisible; 
-            localStorage.setItem('admin_ghost_mode', isAdminInvisible);
-            alert("Призрак: " + isAdminInvisible);
+        if (type === 'luck') {
+            isLuckX2 = true;
+            document.getElementById('notice').innerText = "🍀 УДАЧА X2 АКТИВИРОВАНА!";
+            setTimeout(() => { isLuckX2 = false; document.getElementById('notice').innerText = ""; }, 300000);
         }
-        if (t === 'say') alert("📢 АДМИН: " + prompt("Текст:"));
-        updateUI();
-        save();
+        if (type === 'say') {
+            let txt = prompt("Введите текст объявления:");
+            document.getElementById('notice').innerText = "📢 " + txt;
+            setTimeout(() => document.getElementById('notice').innerText = "", 5000);
+        }
+        updateDisplay();
     }
 
-    function updateUI() {
-        document.getElementById('val').innerText = balance.toLocaleString();
+    function updateDisplay() {
+        document.getElementById('balance').innerText = '🍀 ' + balance.toLocaleString();
+        localStorage.setItem('clover_bal', balance);
     }
 
-    function save() { localStorage.setItem('user_balance', balance); }
-
-    function toggleLB() {
-        let m = document.getElementById('lb-modal');
-        m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
-        if(m.style.display === 'flex') {
-            document.getElementById('lb-list').innerHTML = `<div style="display:flex; justify-content:space-between; padding:10px; color:gold;"><span>1. You</span><span>${balance.toLocaleString()} 🍀</span></div>`;
-        }
-    }
-
-    updateUI();
+    updateDisplay();
 </script>
-
 </body>
 </html>
