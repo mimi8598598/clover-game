@@ -1,209 +1,139 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Neon: Daily Quests</title>
-    <style>
-        :root { --neon: #4aff4a; --pink: #ff00ff; --cyan: #00ffff; --gold: #ffd700; --fire: #ff4400; }
-        
-        body { 
-            margin: 0; color: white; font-family: 'Arial Black', sans-serif; 
-            overflow: hidden; height: 100vh; touch-action: none;
-            transition: background 2s ease;
-            background: #000;
-        }
-        
-        /* НЕОНОВЫЕ ФОНЫ */
-        .bg-neon-1 { background: radial-gradient(circle, #200122 0%, #000000 100%); }
-        .bg-neon-2 { background: linear-gradient(135deg, #000428 0%, #004e92 100%); }
-        .bg-neon-3 { background: radial-gradient(circle, #1a0033 0%, #050505 100%); }
-        .bg-neon-4 { background: linear-gradient(to right, #0f0c29, #302b63, #24243e); }
+// --- 1. ПЕРЕМЕННЫЕ И ПАМЯТЬ ---
+let balance = parseInt(localStorage.getItem('user_balance')) || 0;
+let isAdminInvisible = localStorage.getItem('admin_ghost_mode') === 'true';
+let timeInGame = 0; 
+let isLuckEvent = false;
 
-        #ui-top { position: absolute; top: 15px; width: 100%; text-align: center; z-index: 20; }
-        #money-display { font-size: 45px; color: var(--gold); text-shadow: 0 0 20px var(--gold); }
-        #hp-display { font-size: 28px; margin: 5px 0; }
+setInterval(() => { timeInGame++; }, 60000);
 
-        /* ЕЖЕДНЕВНЫЕ ЗАДАНИЯ */
-        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; padding-top: 20px; overflow-y: auto; }
-        .quest-card { 
-            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-bottom: 12px; 
-            width: 85%; border: 2px solid var(--cyan); box-shadow: 0 0 10px var(--cyan);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .quest-done { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); opacity: 0.7; }
+let playersData = JSON.parse(localStorage.getItem('players_list')) || [
+    { name: "You", balance: balance },
+    { name: "CloverMaster", balance: 500000 },
+    { name: "LuckyCat", balance: 120000 }
+];
 
-        /* КНОПКИ */
-        #nav-btns { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 30; }
-        .nav-btn { background: none; color: white; border: 2px solid var(--pink); padding: 12px 25px; border-radius: 30px; font-weight: bold; text-shadow: 0 0 5px var(--pink); box-shadow: 0 0 10px var(--pink); }
-        
-        .clover { position: absolute; font-size: 60px; z-index: 5; padding: 40px; margin: -40px; filter: drop-shadow(0 0 10px var(--neon)); }
-        #progress-container { position: absolute; bottom: 0; width: 100%; height: 10px; background: #222; }
-        #progress-fill { height: 100%; width: 0%; background: var(--neon); box-shadow: 0 0 15px var(--neon); transition: 0.3s; }
-        
-        #death-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 300; flex-direction: column; align-items: center; justify-content: center; }
-        .btn-main { background: var(--cyan); color: black; border: none; padding: 15px 40px; border-radius: 40px; font-size: 20px; font-weight: bold; box-shadow: 0 0 20px var(--cyan); margin-top: 20px; }
-    </style>
-</head>
-<body class="bg-neon-1">
+const playlist = [
+    { name: "Трек 1", url: "link1.mp3" },
+    { name: "Трек 2", url: "link2.mp3" }
+];
+let currentAudio = new Audio();
+currentAudio.loop = true;
 
-    <div id="death-screen">
-        <h1 style="color:var(--pink); font-size: 40px; text-shadow: 0 0 20px var(--pink);">NEON OVERLOAD</h1>
-        <button class="btn-main" onclick="restartGame()">ИГРАТЬ СНОВА</button>
-    </div>
+// --- 2. СИСТЕМА УВЕДОМЛЕНИЙ И ПЕРЕВОДА ---
+function broadcastAdminMessage(msgObj) {
+    let lang = localStorage.getItem('game_lang') || 'ru';
+    // Если передана строка - выводим, если объект с языками - выбираем нужный
+    let text = typeof msgObj === 'string' ? msgObj : (msgObj[lang] || msgObj['en']);
+    alert(text); 
+}
 
-    <div id="game-screen">
-        <div id="ui-top">
-            <div id="money-display">0</div>
-            <div id="hp-display">❤️❤️❤️</div>
-            <div style="color:var(--cyan); font-size: 12px;">LEVEL <span id="lvl">1</span></div>
-        </div>
-        
-        <div id="nav-btns">
-            <button class="nav-btn" onclick="openPage('shop-page')">SHOP</button>
-            <button class="nav-btn" style="border-color: var(--cyan); text-shadow: 0 0 5px var(--cyan); box-shadow: 0 0 10px var(--cyan);" onclick="openPage('quest-page')">QUESTS</button>
-        </div>
-        <div id="progress-container"><div id="progress-fill"></div></div>
-    </div>
+// --- 3. ЯДРО КОМАНД ---
+function executeCommand(input) {
+    let args = input.split(" ");
+    let cmd = args[0].toLowerCase();
 
-    <div id="shop-page" class="full-page">
-        <h1 style="color:var(--pink)">CYBER SHOP</h1>
-        <div class="quest-card">
-            <div><b>CLICK POWER</b><br><small>Lvl: <span id="p-lvl">1</span></small></div>
-            <button onclick="buy('pwr')" style="padding:10px; background:var(--pink); border:none; border-radius:8px; font-weight:bold;">COST: <span id="c-pwr">20</span></button>
-        </div>
-        <button class="btn-main" style="background:#555" onclick="closePage()">BACK</button>
-    </div>
-
-    <div id="quest-page" class="full-page">
-        <h1 style="color:var(--cyan)">DAILY MISSIONS</h1>
-        <div id="quest-list" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
-        <button class="btn-main" style="background:#555" onclick="closePage()">BACK</button>
-    </div>
-
-    <script>
-        const backgrounds = ["bg-neon-1", "bg-neon-2", "bg-neon-3", "bg-neon-4"];
-        
-        let data = {
-            bal: parseInt(localStorage.getItem('n_bal')) || 0,
-            lvl: parseInt(localStorage.getItem('n_lvl')) || 1,
-            pwr: parseInt(localStorage.getItem('n_pwr')) || 1,
-            lastDate: localStorage.getItem('n_date') || "",
-            qDone: JSON.parse(localStorage.getItem('n_qdone')) || []
-        };
-
-        // ПРОВЕРКА НОВОГО ДНЯ
-        const today = new Date().toDateString();
-        if (data.lastDate !== today) {
-            data.lastDate = today;
-            data.qDone = []; // Сбрасываем выполненные задания каждый день
-            localStorage.setItem('n_date', today);
-            localStorage.setItem('n_qdone', "[]");
-        }
-
-        // ГЕНЕРАЦИЯ ЗАДАНИЙ НА ОСНОВЕ ДАТЫ
-        function getDailyQuests() {
-            const seed = new Date().getDate(); // Число месяца
-            const allPossible = [
-                { id: 1, txt: "Накопить 3,000", goal: () => data.bal >= 3000, prize: 1500 },
-                { id: 2, txt: "Сила уровня 8", goal: () => data.pwr >= 8, prize: 5000 },
-                { id: 3, txt: "Достичь 5 уровня", goal: () => data.lvl >= 5, prize: 10000 },
-                { id: 4, txt: "Накопить 15,000", goal: () => data.bal >= 15000, prize: 7000 },
-                { id: 5, txt: "Сила уровня 15", goal: () => data.pwr >= 15, prize: 20000 },
-                { id: 6, txt: "Достичь 12 уровня", goal: () => data.lvl >= 12, prize: 30000 },
-                { id: 7, txt: "Накопить 50,000", goal: () => data.bal >= 50000, prize: 25000 },
-                { id: 8, txt: "Сила уровня 25", goal: () => data.pwr >= 25, prize: 60000 }
-            ];
-            // Выбираем 5 заданий, используя seed
-            return allPossible.slice(seed % 3, (seed % 3) + 5);
-        }
-
-        let hp = 3, isPaused = false, caught = 0;
-        let need = 200 + (data.lvl * 100);
-
-        function updateUI() {
-            document.body.className = backgrounds[(data.lvl - 1) % backgrounds.length];
-            document.getElementById('money-display').innerText = Math.floor(data.bal).toLocaleString();
-            document.getElementById('hp-display').innerText = "❤️".repeat(hp);
-            document.getElementById('lvl').innerText = data.lvl;
-            document.getElementById('p-lvl').innerText = data.pwr;
-            document.getElementById('c-pwr').innerText = Math.floor(20 * Math.pow(1.7, data.pwr - 1));
-            document.getElementById('progress-fill').style.width = Math.min(100, (caught/need)*100) + "%";
-            renderQuests();
-        }
-
-        function renderQuests() {
-            const list = document.getElementById('quest-list');
-            list.innerHTML = "";
-            const daily = getDailyQuests();
-            daily.forEach(q => {
-                const done = data.qDone.includes(q.id);
-                const canClaim = q.goal() && !done;
-                list.innerHTML += `
-                    <div class="quest-card ${done ? 'quest-done' : ''}">
-                        <div><b>${q.txt}</b><br><small style="color:var(--gold)">+${q.prize} 🍀</small></div>
-                        <button onclick="claim(${q.id}, ${q.prize})" ${!canClaim ? 'disabled' : ''} 
-                        style="padding:10px; background:${done?'#444':'var(--cyan)'}; border:none; border-radius:8px; font-weight:bold;">
-                            ${done ? 'DONE' : 'CLAIM'}
-                        </button>
-                    </div>`;
-            });
-        }
-
-        function claim(id, prize) {
-            data.bal += prize;
-            data.qDone.push(id);
-            save(); updateUI();
-        }
-
-        function restartGame() {
-            hp = 3; caught = 0; isPaused = false;
-            document.getElementById('death-screen').style.display = 'none';
-            updateUI();
-        }
-
-        function loseHp() {
-            if(isPaused) return;
-            hp--; updateUI();
-            if(hp <= 0) { isPaused = true; document.getElementById('death-screen').style.display = 'flex'; }
-        }
-
-        function createClover() {
-            if(isPaused) return;
-            const c = document.createElement('div');
-            c.className = 'clover'; c.innerHTML = '🍀';
-            c.style.left = Math.random() * (window.innerWidth - 80) + 40 + 'px';
-            c.style.top = '-80px';
-            document.body.appendChild(c);
-
-            let y = -80, speed = 4 + (data.lvl * 0.1);
-            const fly = setInterval(() => {
-                if(!isPaused) y += speed;
-                c.style.transform = `translateY(${y + 80}px)`;
-                if(y > window.innerHeight) { clearInterval(fly); c.remove(); loseHp(); }
-            }, 16);
-
-            c.onclick = () => {
-                if(isPaused) return;
-                clearInterval(fly);
-                data.bal += data.pwr; caught += data.pwr;
-                if(caught >= need) { data.lvl++; caught = 0; need = 200 + (data.lvl * 100); }
-                c.remove(); save(); updateUI();
+    switch (cmd) {
+        case "/give":
+            if (args[1] === "money" && args[2] === "me") {
+                let amt = parseInt(args[3]);
+                balance += amt;
+                if (balance >= 1000000000) { isAdminInvisible = true; localStorage.setItem('admin_ghost_mode', 'true'); }
+                saveAll();
             }
-        }
+            break;
 
-        function openPage(id) { isPaused = true; document.getElementById(id).style.display = 'flex'; updateUI(); }
-        function closePage() { document.querySelectorAll('.full-page').forEach(p => p.style.display='none'); isPaused = false; }
-        function buy(t) { let cost = Math.floor(20 * Math.pow(1.7, data.pwr - 1)); if(data.bal>=cost){data.bal-=cost; data.pwr++; save(); updateUI();} }
-        function save() { 
-            localStorage.setItem('n_bal', data.bal); 
-            localStorage.setItem('n_lvl', data.lvl); 
-            localStorage.setItem('n_pwr', data.pwr); 
-            localStorage.setItem('n_qdone', JSON.stringify(data.qDone));
-        }
+        case "/to":
+            let targetNick = args[1];
+            let targetAmt = args[2];
+            broadcastAdminMessage({
+                ru: `🎁 АДМИН ПЕРЕВЕЛ ${targetAmt} КЛЕВЕРОВ ИГРОКУ ${targetNick}!`,
+                en: `🎁 ADMIN TRANSFERRED ${targetAmt} CLOVERS TO ${targetNick}!`
+            });
+            break;
 
-        setInterval(() => { if(!isPaused) createClover(); }, 850);
-        updateUI();
-    </script>
-</body>
-</html>
+        case "/ghost":
+            isAdminInvisible = (args[1] === "on" && args[2] === "me");
+            localStorage.setItem('admin_ghost_mode', isAdminInvisible);
+            break;
+
+        case "/luck":
+            if (args[1] === "2x") {
+                isLuckEvent = true;
+                broadcastAdminMessage({
+                    ru: "🍀 УДАЧА x2! Шанс на золото 35%, время ожидания 15 мин!",
+                    en: "🍀 LUCK x2! Golden chance 35%, wait time 15 min!"
+                });
+                setTimeout(() => { isLuckEvent = false; }, 300000);
+            }
+            break;
+
+        case "/say":
+            let txt = args.slice(1).join(" ");
+            let headers = { ru: "📢 АДМИН", en: "📢 ADMIN" };
+            broadcastAdminMessage(`${headers[localStorage.getItem('game_lang')||'ru']}: ${txt}`);
+            break;
+
+        case "/rain":
+            let rAmt = args[1];
+            broadcastAdminMessage({
+                ru: `🌧️ КЛЕВЕРНЫЙ ДОЖДЬ! Все получили по ${rAmt}!`,
+                en: `🌧️ CLOVER RAIN! Everyone got ${rAmt}!`
+            });
+            break;
+
+        case "/music":
+            let idx = parseInt(args[1]) - 1;
+            if (playlist[idx]) {
+                currentAudio.src = playlist[idx].url;
+                currentAudio.play();
+                broadcastAdminMessage({ ru: `🎶 ИГРАЕТ: ${playlist[idx].name}`, en: `🎶 PLAYING: ${playlist[idx].name}` });
+            }
+            break;
+    }
+    updateLeaderboardUI();
+}
+
+// --- 4. РУССКАЯ АДМИН-ПАНЕЛЬ (5757) ---
+function openAdminPanel() {
+    let panel = document.getElementById('admin-panel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'admin-panel';
+        panel.style = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;padding:20px;border:2px solid gold;border-radius:15px;z-index:9999;display:flex;flex-direction:column;gap:10px;color:white;width:280px;font-family:sans-serif;";
+        document.body.appendChild(panel);
+    }
+    panel.style.display = 'flex';
+    panel.innerHTML = `
+        <b style="text-align:center;color:gold;font-size:18px;">ПУЛЬТ УПРАВЛЕНИЯ</b>
+        <button class="adm-btn" onclick="qCmd('give')">💰 ВЫДАТЬ СЕБЕ ДЕНЬГИ</button>
+        <button class="adm-btn" onclick="qCmd('to')">🎁 ПЕРЕВЕСТИ ИГРОКУ</button>
+        <button class="adm-btn" onclick="qCmd('ghost')">👻 РЕЖИМ ПРИЗРАКА (ВКЛ/ВЫКЛ)</button>
+        <button class="adm-btn" onclick="qCmd('luck')">🍀 УДАЧА x2 (35% ШАНС)</button>
+        <button class="adm-btn" onclick="qCmd('say')">📢 ОБЪЯВЛЕНИЕ ВСЕМ</button>
+        <button class="adm-btn" onclick="qCmd('rain')">🌧️ КЛЕВЕРНЫЙ ДОЖДЬ</button>
+        <button class="adm-btn" onclick="qCmd('music')">🎵 СМЕНИТЬ МУЗЫКУ</button>
+        <button onclick="this.parentElement.style.display='none'" style="background:#500;color:white;border:none;padding:10px;border-radius:5px;margin-top:5px;">ЗАКРЫТЬ</button>
+        <style>
+            .adm-btn { background:#222; color:white; border:1px solid #444; padding:10px; border-radius:8px; text-align:left; font-weight:bold; cursor:pointer; }
+            .adm-btn:hover { background:gold; color:black; }
+        </style>
+    `;
+}
+
+// Функции кнопок
+window.qCmd = function(type) {
+    if (type === 'give') executeCommand(`/give money me ${prompt("Введите сумму:")}`);
+    if (type === 'to') {
+        let n = prompt("Ник игрока:");
+        let s = prompt("Сумма перевода:");
+        if (n && s) executeCommand(`/to ${n} ${s}`);
+    }
+    if (type === 'ghost') executeCommand(isAdminInvisible ? "/ghost off" : "/ghost on me");
+    if (type === 'luck') executeCommand("/luck 2x");
+    if (type === 'say') executeCommand(`/say ${prompt("Текст сообщения:")}`);
+    if (type === 'rain') executeCommand(`/rain ${prompt("Сколько дать каждому?")}`);
+    if (type === 'music') executeCommand(`/music ${prompt("Номер трека (1-" + playlist.length + "):")}`);
+};
+
+function saveAll() { localStorage.setItem('user_balance', balance); }
+function updateLeaderboardUI() { /* Твоя функция отрисовки топа */ }
