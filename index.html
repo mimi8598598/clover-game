@@ -3,97 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Game x2</title>
+    <title>Clover App</title>
     <style>
-        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
-        #bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #0a200a, #000); z-index: -1; }
+        :root { --gold: #ffd700; --panel: #111; }
+        body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; }
         
-        #ui { position: fixed; top: 20px; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
-        #score-box { display: inline-block; pointer-events: auto; background: rgba(0,0,0,0.6); padding: 10px 25px; border-radius: 40px; border: 2px solid gold; cursor: pointer; }
-        #balance { font-size: 38px; color: gold; font-weight: bold; text-shadow: 0 0 10px gold; }
+        /* Фон и игра */
+        #game-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .clover { position: absolute; font-size: 40px; cursor: pointer; z-index: 2; }
 
-        .clover { position: absolute; font-size: 45px; cursor: pointer; user-select: none; z-index: 10; }
-        .gold { filter: drop-shadow(0 0 15px gold); animation: pulse 0.6s infinite alternate; }
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+        /* Верхняя панель */
+        #header { position: fixed; top: 0; width: 100%; padding: 15px 0; text-align: center; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); z-index: 10; }
+        #main-balance { font-size: 32px; color: var(--gold); font-weight: bold; text-shadow: 0 0 10px gold; cursor: pointer; }
 
-        #admin-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: #111; border: 2px solid gold; border-radius: 20px; padding: 20px; z-index: 1000; box-shadow: 0 0 50px #000; }
-        .adm-btn { width: 100%; margin: 5px 0; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        /* Окна разделов */
+        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 70px); background: #000; z-index: 50; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .active-screen { display: block; }
+        h2 { color: var(--gold); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
+
+        /* Элементы меню */
+        .card { background: var(--panel); border-radius: 15px; padding: 15px; margin-bottom: 10px; border: 1px solid #222; }
+        .btn-task { float: right; background: var(--gold); color: black; border: none; padding: 5px 15px; border-radius: 10px; font-weight: bold; }
+
+        /* Нижнее меню */
+        #nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #111; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #333; z-index: 100; }
+        .nav-item { text-align: center; color: #777; font-size: 12px; cursor: pointer; text-decoration: none; }
+        .nav-item.active { color: var(--gold); }
+        .nav-item i { font-size: 24px; display: block; margin-bottom: 4px; }
+
+        /* Админка */
+        #admin-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: #222; border: 2px solid var(--gold); border-radius: 20px; padding: 20px; z-index: 1000; }
+        .adm-btn { width: 100%; margin: 5px 0; padding: 12px; background: #333; color: white; border: none; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="bg"></div>
-<div id="ui">
-    <div id="score-box" onclick="adminCheck()">
-        <span id="balance">🍀 0</span>
-        <div style="font-size: 10px; color: #555;">ADMIN: 5757</div>
+    <div id="header">
+        <div id="main-balance" onclick="adminTrigger()">🍀 <span id="bal-txt">0</span></div>
     </div>
-</div>
 
-<div id="admin-panel">
-    <h3 style="text-align:center; color:gold; margin:0 0 10px 0;">ПУЛЬТ 5757</h3>
-    <button class="adm-btn" onclick="addMoney()">💰 ВЫДАТЬ +1,000,000</button>
-    <button class="adm-btn" onclick="activateLuck()">🍀 ШАНС 35% (LUCK)</button>
-    <button onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; margin-top:10px; background:red; color:white; border:none; padding:10px; border-radius:10px;">ЗАКРЫТЬ</button>
-</div>
+    <div id="screen-game" class="screen active-screen" style="background: transparent;">
+        </div>
 
-<script>
-    let bal = parseInt(localStorage.getItem('clover_bal')) || 0;
-    let isLuck = false;
-    let clicks = 0;
+    <div id="screen-bank" class="screen">
+        <h2>МОЙ БАНК</h2>
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 14px; color: #888;">Доступно к выводу:</div>
+            <div style="font-size: 30px; color: var(--gold); margin: 10px 0;">🍀 <span class="bal-sync">0</span></div>
+            <button style="width: 100%; padding: 12px; background: #222; color: #555; border: 1px solid #333; border-radius: 10px;">ВЫВЕСТИ (ОТ 1,000,000)</button>
+        </div>
+        <div class="card">
+            <div style="color: #5f5;">● Статус аккаунта: Активен</div>
+            <div style="color: #888; font-size: 12px;">ID игрока: 5757-WEB-APP</div>
+        </div>
+    </div>
 
-    function spawnClover() {
-        const c = document.createElement('div');
-        const chance = Math.random() * 100;
-        // Золотой клевер (🌟) выпадает с шансом 35% если включена удача, иначе 5%
-        const isGold = isLuck ? (chance < 35) : (chance < 5);
+    <div id="screen-tasks">
+        <div class="screen" id="tasks-content">
+            <h2>ЗАДАНИЯ</h2>
+            <div class="card">
+                <button class="btn-task" onclick="doTask(5000)">+5k</button>
+                <b>Подпишись на канал</b><br><small>+5,000 Клеверов</small>
+            </div>
+            <div class="card">
+                <button class="btn-task" onclick="doTask(10000)">+10k</button>
+                <b>Пригласи 3 друзей</b><br><small>+10,000 Клеверов</small>
+            </div>
+            <div class="card">
+                <button class="btn-task" onclick="doTask(2000)">+2k</button>
+                <b>Поставь лайк</b><br><small>+2,000 Клеверов</small>
+            </div>
+        </div>
+    </div>
 
-        c.className = 'clover' + (isGold ? ' gold' : '');
-        c.innerHTML = isGold ? '🌟' : '🍀';
-        c.style.left = Math.random() * (window.innerWidth - 60) + 'px';
-        c.style.top = '-60px';
-        document.body.appendChild(c);
+    <div id="screen-settings" class="screen">
+        <h2>НАСТРОЙКИ</h2>
+        <div class="card">
+            <span>Звуковые эффекты</span>
+            <button class="btn-task" style="background: #333; color: white;">ВКЛ</button>
+        </div>
+        <div class="card">
+            <span>Язык приложения</span>
+            <button class="btn-task" style="background: #333; color: white;">РУССКИЙ</button>
+        </div>
+        <p style="text-align: center; color: #444; font-size: 12px; margin-top: 50px;">Clover Game v2.0.1<br>Powered by 5757-ADMIN</p>
+    </div>
 
-        let speed = Math.random() * 2 + 3;
-        let pos = -60;
+    <div id="admin-panel">
+        <h3 style="text-align:center; color:gold;">ПУЛЬТ 5757</h3>
+        <button class="adm-btn" onclick="addMoney()">💰 ВЫДАТЬ +1,000,000</button>
+        <button class="adm-btn" onclick="setLuck()">🍀 ШАНС 35% (УДАЧА)</button>
+        <button onclick="closeAdmin()" style="width:100%; background:red; color:white; border:none; padding:10px; border-radius:10px; margin-top:10px;">ЗАКРЫТЬ</button>
+    </div>
 
-        let fall = setInterval(() => {
-            pos += speed;
-            c.style.top = pos + 'px';
-            if (pos > window.innerHeight) { clearInterval(fall); c.remove(); }
-        }, 16);
+    <div id="nav">
+        <div class="nav-item active" onclick="showScreen('game')">🎮<br>Игра</div>
+        <div class="nav-item" onclick="showScreen('bank')">🏦<br>Банк</div>
+        <div class="nav-item" onclick="showScreen('tasks')">📋<br>Задания</div>
+        <div class="nav-item" onclick="showScreen('settings')">⚙️<br>Настройки</div>
+    </div>
 
-        c.onclick = () => {
-            clearInterval(fall);
-            // ТВОЕ ТРЕБОВАНИЕ: +2 за обычный клик
-            bal += isGold ? 100 : 2; 
-            updateUI();
-            c.remove();
-        };
-    }
+    <script>
+        let balance = parseInt(localStorage.getItem('clover_bal')) || 0;
+        let isLuck = false;
+        let admClicks = 0;
 
-    function adminCheck() {
-        clicks++;
-        if(clicks >= 5) {
-            if(prompt("PASSWORD:") === "5757") document.getElementById('admin-panel').style.display='block';
-            clicks = 0;
+        // Переключение экранов
+        function showScreen(name) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            if(name === 'tasks') document.getElementById('tasks-content').classList.add('active-screen');
+            else document.getElementById('screen-' + name).classList.add('active-screen');
+            
+            event.currentTarget.classList.add('active');
         }
-    }
 
-    function addMoney() { bal += 1000000; updateUI(); }
-    function activateLuck() { isLuck = true; alert("ШАНС 35% ВКЛЮЧЕН!"); }
-    function updateUI() { 
-        document.getElementById('balance').innerText = '🍀 ' + bal.toLocaleString(); 
-        localStorage.setItem('clover_bal', bal);
-    }
+        // Логика падения клеверов
+        function spawn() {
+            const sc = document.getElementById('screen-game');
+            if (!sc.classList.contains('active-screen')) return;
 
-    // ТВОЕ ТРЕБОВАНИЕ: Падают сразу 2 клевера
-    setInterval(() => {
-        spawnClover();
-        spawnClover();
-    }, 1000); // Каждую секунду падает пара
+            const c = document.createElement('div');
+            const roll = Math.random() * 100;
+            const isGold = isLuck ? (roll < 35) : (roll < 5);
+            
+            c.className = 'clover';
+            c.innerHTML = isGold ? '🌟' : '🍀';
+            if(isGold) c.style.filter = 'drop-shadow(0 0 10px gold)';
+            
+            c.style.left = Math.random() * (window.innerWidth - 50) + 'px';
+            c.style.top = '-50px';
+            sc.appendChild(c);
 
-    updateUI();
-</script>
+            let pos = -50;
+            let fall = setInterval(() => {
+                pos += 1.5;
+                c.style.top = pos + 'px';
+                if (pos > window.innerHeight) { clearInterval(fall); c.remove(); }
+            }, 16);
+
+            c.onclick = () => {
+                clearInterval(fall);
+                balance += isGold ? 100 : 2; // +2 за клик
+                updateUI();
+                c.remove();
+            };
+        }
+
+        // Админка
+        function adminTrigger() {
+            admClicks++;
+            if(admClicks >= 5) {
+                if(prompt("ВВЕДИТЕ КОД:") === "5757") document.getElementById('admin-panel').style.display='block';
+                admClicks = 0;
+            }
+        }
+
+        function addMoney() { balance += 1000000; updateUI(); }
+        function setLuck() { isLuck = true; alert("ШАНС 35% ВКЛ!"); }
+        function closeAdmin() { document.getElementById('admin-panel').style.display='none'; }
+        
+        function doTask(reward) {
+            balance += reward;
+            updateUI();
+            alert("Задание выполнено! Начислено: " + reward);
+        }
+
+        function updateUI() {
+            document.getElementById('bal-txt').innerText = balance.toLocaleString();
+            document.querySelectorAll('.bal-sync').forEach(el => el.innerText = balance.toLocaleString());
+            localStorage.setItem('clover_bal', balance);
+        }
+
+        // Запуск
+        setInterval(() => { spawn(); spawn(); }, 1200);
+        updateUI();
+    </script>
 </body>
 </html>
