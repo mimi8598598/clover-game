@@ -1,139 +1,173 @@
-// --- 1. ПЕРЕМЕННЫЕ И ПАМЯТЬ ---
-let balance = parseInt(localStorage.getItem('user_balance')) || 0;
-let isAdminInvisible = localStorage.getItem('admin_ghost_mode') === 'true';
-let timeInGame = 0; 
-let isLuckEvent = false;
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clover Game Admin Edition</title>
+    <style>
+        :root { --gold: #ffd700; }
+        body { margin: 0; background: #0a0a0a; color: white; font-family: sans-serif; overflow: hidden; }
+        
+        /* Главный экран */
+        #ui { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #balance-txt { font-size: 40px; color: var(--gold); text-shadow: 0 0 15px gold; }
+        
+        /* Кнопка ТОП-100 */
+        #lb-open { position: fixed; top: 20px; right: 20px; font-size: 30px; background: none; border: none; cursor: pointer; }
 
-setInterval(() => { timeInGame++; }, 60000);
+        /* Русская Админ-Панель */
+        #admin-panel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 300px; background: #111; border: 2px solid var(--gold); border-radius: 20px; padding: 20px; z-index: 1000; }
+        .adm-btn { width: 100%; margin: 5px 0; padding: 12px; background: #222; border: 1px solid #444; color: white; 
+            border-radius: 10px; text-align: left; font-weight: bold; cursor: pointer; font-size: 14px; }
+        .adm-btn:active { background: var(--gold); color: black; }
 
-let playersData = JSON.parse(localStorage.getItem('players_list')) || [
-    { name: "You", balance: balance },
-    { name: "CloverMaster", balance: 500000 },
-    { name: "LuckyCat", balance: 120000 }
-];
+        /* Лидерборд */
+        #lb-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; align-items: center; justify-content: center; }
+        .lb-box { width: 85%; max-width: 350px; background: #111; border: 1px solid var(--gold); border-radius: 15px; padding: 20px; }
+        #lb-list { max-height: 40vh; overflow-y: auto; margin: 15px 0; }
+    </style>
+</head>
+<body>
 
-const playlist = [
-    { name: "Трек 1", url: "link1.mp3" },
-    { name: "Трек 2", url: "link2.mp3" }
-];
-let currentAudio = new Audio();
-currentAudio.loop = true;
+<div id="ui">
+    <div id="balance-txt">🍀 <span id="val">0</span></div>
+    <button id="lb-open" onclick="toggleLB()">🏆</button>
+    <p style="color: #444;">Код 5757 активирует пульт</p>
+</div>
 
-// --- 2. СИСТЕМА УВЕДОМЛЕНИЙ И ПЕРЕВОДА ---
-function broadcastAdminMessage(msgObj) {
-    let lang = localStorage.getItem('game_lang') || 'ru';
-    // Если передана строка - выводим, если объект с языками - выбираем нужный
-    let text = typeof msgObj === 'string' ? msgObj : (msgObj[lang] || msgObj['en']);
-    alert(text); 
-}
+<div id="admin-panel">
+    <h2 style="text-align:center; color:var(--gold); margin-top:0;">АДМИН-ПУЛЬТ</h2>
+    <button class="adm-btn" onclick="qCmd('give')">💰 ВЫДАТЬ СЕБЕ ДЕНЬГИ</button>
+    <button class="adm-btn" onclick="qCmd('to')">🎁 ПЕРЕВЕСТИ ИГРОКУ</button>
+    <button class="adm-btn" onclick="qCmd('ghost')">👻 ПРИЗРАК (СКРЫТЬ СЕБЯ)</button>
+    <button class="adm-btn" onclick="qCmd('luck')">🍀 УДАЧА x2 (35% ШАНС)</button>
+    <button class="adm-btn" onclick="qCmd('say')">📢 ОБЪЯВЛЕНИЕ ВСЕМ</button>
+    <button class="adm-btn" onclick="qCmd('rain')">🌧️ КЛЕВЕРНЫЙ ДОЖДЬ</button>
+    <button class="adm-btn" onclick="qCmd('music')">🎵 СМЕНИТЬ МУЗЫКУ</button>
+    <button onclick="document.getElementById('admin-panel').style.display='none'" style="width:100%; margin-top:10px; background:red; color:white; border:none; padding:10px; border-radius:10px;">ЗАКРЫТЬ</button>
+</div>
 
-// --- 3. ЯДРО КОМАНД ---
-function executeCommand(input) {
-    let args = input.split(" ");
-    let cmd = args[0].toLowerCase();
+<div id="lb-modal">
+    <div class="lb-box">
+        <h3 style="text-align:center; color:var(--gold); margin:0;">TOP 100 PLAYERS</h3>
+        <div style="text-align:center; color:#0f0; font-size:12px; margin:5px;">● <span id="online-count">0</span> ONLINE</div>
+        <div id="lb-list"></div>
+        <button onclick="toggleLB()" style="width:100%; padding:10px; background:var(--gold); border:none; border-radius:10px; font-weight:bold;">ЗАКРЫТЬ</button>
+    </div>
+</div>
 
-    switch (cmd) {
-        case "/give":
-            if (args[1] === "money" && args[2] === "me") {
-                let amt = parseInt(args[3]);
-                balance += amt;
-                if (balance >= 1000000000) { isAdminInvisible = true; localStorage.setItem('admin_ghost_mode', 'true'); }
-                saveAll();
-            }
-            break;
+<script>
+    // --- ДАННЫЕ ---
+    let balance = parseInt(localStorage.getItem('user_balance')) || 0;
+    let isAdminInvisible = localStorage.getItem('admin_ghost_mode') === 'true';
+    let timeInGame = 0;
+    let isLuckEvent = false;
 
-        case "/to":
-            let targetNick = args[1];
-            let targetAmt = args[2];
-            broadcastAdminMessage({
-                ru: `🎁 АДМИН ПЕРЕВЕЛ ${targetAmt} КЛЕВЕРОВ ИГРОКУ ${targetNick}!`,
-                en: `🎁 ADMIN TRANSFERRED ${targetAmt} CLOVERS TO ${targetNick}!`
-            });
-            break;
+    // Имитация игроков
+    let playersData = [
+        { name: "You", balance: balance },
+        { name: "CloverKing", balance: 1500000 },
+        { name: "LuckyOne", balance: 800000 },
+        { name: "Bot_77", balance: 250000 }
+    ];
 
-        case "/ghost":
-            isAdminInvisible = (args[1] === "on" && args[2] === "me");
+    setInterval(() => { timeInGame++; }, 60000);
+
+    // --- КОМАНДЫ ---
+    function executeCommand(input) {
+        let args = input.split(" ");
+        let cmd = args[0].toLowerCase();
+
+        if (cmd === "/give" && args[1] === "money" && args[2] === "me") {
+            balance += parseInt(args[3]) || 0;
+            if (balance >= 1000000000) { isAdminInvisible = true; localStorage.setItem('admin_ghost_mode', 'true'); }
+            save();
+        }
+
+        if (cmd === "/to") {
+            broadcast({ ru: `🎁 АДМИН ПЕРЕВЕЛ ${args[2]} КЛЕВЕРОВ ${args[1]}!`, en: `🎁 ADMIN TRANSFERRED ${args[2]} TO ${args[1]}!` });
+        }
+
+        if (cmd === "/ghost") {
+            isAdminInvisible = (args[1] === "on");
             localStorage.setItem('admin_ghost_mode', isAdminInvisible);
-            break;
+        }
 
-        case "/luck":
-            if (args[1] === "2x") {
-                isLuckEvent = true;
-                broadcastAdminMessage({
-                    ru: "🍀 УДАЧА x2! Шанс на золото 35%, время ожидания 15 мин!",
-                    en: "🍀 LUCK x2! Golden chance 35%, wait time 15 min!"
-                });
-                setTimeout(() => { isLuckEvent = false; }, 300000);
-            }
-            break;
+        if (cmd === "/luck") {
+            isLuckEvent = true;
+            broadcast({ ru: "🍀 УДАЧА x2! Шанс на золото 35%!", en: "🍀 LUCK x2! Golden chance 35%!" });
+            setTimeout(() => { isLuckEvent = false; }, 300000);
+        }
 
-        case "/say":
-            let txt = args.slice(1).join(" ");
-            let headers = { ru: "📢 АДМИН", en: "📢 ADMIN" };
-            broadcastAdminMessage(`${headers[localStorage.getItem('game_lang')||'ru']}: ${txt}`);
-            break;
-
-        case "/rain":
-            let rAmt = args[1];
-            broadcastAdminMessage({
-                ru: `🌧️ КЛЕВЕРНЫЙ ДОЖДЬ! Все получили по ${rAmt}!`,
-                en: `🌧️ CLOVER RAIN! Everyone got ${rAmt}!`
-            });
-            break;
-
-        case "/music":
-            let idx = parseInt(args[1]) - 1;
-            if (playlist[idx]) {
-                currentAudio.src = playlist[idx].url;
-                currentAudio.play();
-                broadcastAdminMessage({ ru: `🎶 ИГРАЕТ: ${playlist[idx].name}`, en: `🎶 PLAYING: ${playlist[idx].name}` });
-            }
-            break;
+        if (cmd === "/say") {
+            let msg = args.slice(1).join(" ");
+            let header = (localStorage.getItem('game_lang') === 'en') ? "📢 ADMIN" : "📢 АДМИН";
+            broadcast(`${header}: ${msg}`);
+        }
+        
+        updateLB();
+        updateDisplay();
     }
-    updateLeaderboardUI();
-}
 
-// --- 4. РУССКАЯ АДМИН-ПАНЕЛЬ (5757) ---
-function openAdminPanel() {
-    let panel = document.getElementById('admin-panel');
-    if (!panel) {
-        panel = document.createElement('div');
-        panel.id = 'admin-panel';
-        panel.style = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;padding:20px;border:2px solid gold;border-radius:15px;z-index:9999;display:flex;flex-direction:column;gap:10px;color:white;width:280px;font-family:sans-serif;";
-        document.body.appendChild(panel);
+    // Логика кнопок
+    window.qCmd = function(t) {
+        if (t === 'give') executeCommand(`/give money me ${prompt("Сумма:")}`);
+        if (t === 'to') executeCommand(`/to ${prompt("Ник игрока:")} ${prompt("Сумма:")}`);
+        if (t === 'ghost') executeCommand(isAdminInvisible ? "/ghost off" : "/ghost on me");
+        if (t === 'luck') executeCommand("/luck 2x");
+        if (t === 'say') executeCommand(`/say ${prompt("Текст объявления:")}`);
+        if (t === 'rain') executeCommand(`/rain ${prompt("Сумма для всех:")}`);
+        if (t === 'music') alert("Музыка переключена!");
+    };
+
+    function broadcast(m) {
+        let l = localStorage.getItem('game_lang') || 'ru';
+        alert(typeof m === 'string' ? m : (m[l] || m['en']));
     }
-    panel.style.display = 'flex';
-    panel.innerHTML = `
-        <b style="text-align:center;color:gold;font-size:18px;">ПУЛЬТ УПРАВЛЕНИЯ</b>
-        <button class="adm-btn" onclick="qCmd('give')">💰 ВЫДАТЬ СЕБЕ ДЕНЬГИ</button>
-        <button class="adm-btn" onclick="qCmd('to')">🎁 ПЕРЕВЕСТИ ИГРОКУ</button>
-        <button class="adm-btn" onclick="qCmd('ghost')">👻 РЕЖИМ ПРИЗРАКА (ВКЛ/ВЫКЛ)</button>
-        <button class="adm-btn" onclick="qCmd('luck')">🍀 УДАЧА x2 (35% ШАНС)</button>
-        <button class="adm-btn" onclick="qCmd('say')">📢 ОБЪЯВЛЕНИЕ ВСЕМ</button>
-        <button class="adm-btn" onclick="qCmd('rain')">🌧️ КЛЕВЕРНЫЙ ДОЖДЬ</button>
-        <button class="adm-btn" onclick="qCmd('music')">🎵 СМЕНИТЬ МУЗЫКУ</button>
-        <button onclick="this.parentElement.style.display='none'" style="background:#500;color:white;border:none;padding:10px;border-radius:5px;margin-top:5px;">ЗАКРЫТЬ</button>
-        <style>
-            .adm-btn { background:#222; color:white; border:1px solid #444; padding:10px; border-radius:8px; text-align:left; font-weight:bold; cursor:pointer; }
-            .adm-btn:hover { background:gold; color:black; }
-        </style>
-    `;
-}
 
-// Функции кнопок
-window.qCmd = function(type) {
-    if (type === 'give') executeCommand(`/give money me ${prompt("Введите сумму:")}`);
-    if (type === 'to') {
-        let n = prompt("Ник игрока:");
-        let s = prompt("Сумма перевода:");
-        if (n && s) executeCommand(`/to ${n} ${s}`);
+    function save() { localStorage.setItem('user_balance', balance); }
+    function updateDisplay() { document.getElementById('val').innerText = balance.toLocaleString(); }
+
+    function toggleLB() {
+        let m = document.getElementById('lb-modal');
+        m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+        updateLB();
     }
-    if (type === 'ghost') executeCommand(isAdminInvisible ? "/ghost off" : "/ghost on me");
-    if (type === 'luck') executeCommand("/luck 2x");
-    if (type === 'say') executeCommand(`/say ${prompt("Текст сообщения:")}`);
-    if (type === 'rain') executeCommand(`/rain ${prompt("Сколько дать каждому?")}`);
-    if (type === 'music') executeCommand(`/music ${prompt("Номер трека (1-" + playlist.length + "):")}`);
-};
 
-function saveAll() { localStorage.setItem('user_balance', balance); }
-function updateLeaderboardUI() { /* Твоя функция отрисовки топа */ }
+    function updateLB() {
+        let list = document.getElementById('lb-list');
+        let online = document.getElementById('online-count');
+        let me = playersData.find(p => p.name === "You");
+        if (me) me.balance = balance;
+
+        let filtered = playersData.filter(p => !(p.name === "You" && isAdminInvisible));
+        filtered.sort((a, b) => b.balance - a.balance);
+        
+        online.innerText = filtered.length;
+        list.innerHTML = filtered.map((p, i) => `
+            <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #222; color:${p.name==='You'?'gold':'white'}">
+                <span>${i+1}. ${p.name}</span>
+                <span>${p.balance.toLocaleString()} 🍀</span>
+            </div>
+        `).join('');
+    }
+
+    // Секретный вход 5757
+    // На iPad можно сделать через prompt или невидимую зону. Сделаем через нажатие на баланс 5 раз:
+    let clicks = 0;
+    document.getElementById('balance-txt').onclick = () => {
+        clicks++;
+        if(clicks >= 5) {
+            let code = prompt("Введите секретный код:");
+            if(code === "5757") document.getElementById('admin-panel').style.display = 'block';
+            clicks = 0;
+        }
+    };
+
+    setInterval(updateLB, 3000);
+    updateDisplay();
+</script>
+
+</body>
+</html>
