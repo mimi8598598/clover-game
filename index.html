@@ -1,28 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Clover Game: Offline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clover Lite</title>
     <style>
-        body { 
-            background: #000; 
-            color: gold; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            margin: 0; 
-            font-family: sans-serif; 
-            text-align: center;
-        }
-        .status { font-size: 50px; margin-bottom: 10px; }
-        .info { color: #555; font-size: 14px; }
+        :root { --gold: #ffd700; }
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        
+        /* Игра */
+        #game-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: radial-gradient(circle, #051505, #000); }
+        .clover { position: absolute; font-size: 45px; cursor: pointer; z-index: 5; }
+
+        /* Шапка */
+        #top { position: fixed; top: 20px; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
+        #bal-display { display: inline-block; padding: 10px 25px; background: rgba(0,0,0,0.8); border: 2px solid var(--gold); border-radius: 50px; color: var(--gold); font-size: 28px; font-weight: bold; pointer-events: auto; }
+
+        /* Экраны */
+        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 70px); background: #000; z-index: 200; padding: 20px; box-sizing: border-box; }
+        .active { display: block; }
+        .card { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #222; }
+
+        /* Навигация */
+        #nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #0a0a0a; display: flex; z-index: 300; border-top: 1px solid #222; }
+        .nav-item { flex: 1; text-align: center; padding-top: 15px; color: #555; cursor: pointer; font-size: 12px; }
+        .nav-item.on { color: var(--gold); }
+
+        /* Поиск в настройках */
+        .search-box { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: #0f0; border-radius: 8px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <div class="status">🚧 OFFLINE</div>
-    <p>ИГРА ВРЕМЕННО ОТКЛЮЧЕНА АДМИНОМ (5757)</p>
-    <div class="info">Технические работы на сервере</div>
+
+    <div id="top">
+        <div id="bal-display">🍀 <span id="val">0</span></div>
+    </div>
+
+    <div id="game-view" class="screen active"></div>
+
+    <div id="scr-bank" class="screen">
+        <h2 style="text-align:center; color:var(--gold);">БАНК</h2>
+        <div class="card" style="text-align:center;">
+            <p>Ваш баланс:</p>
+            <h1 style="color:var(--gold);">🍀 <span class="sync">0</span></h1>
+        </div>
+    </div>
+
+    <div id="scr-tasks" class="screen">
+        <h2 style="text-align:center; color:var(--gold);">ЗАДАНИЯ</h2>
+        <div class="card">Подписка на ТГ <button onclick="add(10000)" style="float:right;">ВЗЯТЬ</button></div>
+        <div class="card">Лайк на видео <button onclick="add(2000)" style="float:right;">ВЗЯТЬ</button></div>
+    </div>
+
+    <div id="scr-set" class="screen">
+        <h2 style="text-align:center; color:var(--gold);">ПОИСК</h2>
+        <input type="text" id="find" class="search-box" placeholder="Введите код...">
+        <button onclick="runCode()" style="width:100%; padding:12px; background:var(--gold); border:none; border-radius:8px; font-weight:bold;">ВЫПОЛНИТЬ</button>
+        <p style="color:#444; font-size:12px; text-align:center; margin-top:20px;">Версия игры: Lite 1.0</p>
+    </div>
+
+    <div id="nav">
+        <div class="nav-item on" onclick="go('game-view', this)">🎮<br>Игра</div>
+        <div class="nav-item" onclick="go('scr-bank', this)">🏦<br>Банк</div>
+        <div class="nav-item" onclick="go('scr-tasks', this)">📋<br>Задания</div>
+        <div class="nav-item" onclick="go('scr-set', this)">⚙️<br>Настройки</div>
+    </div>
+
+    <script>
+        let bal = parseInt(localStorage.getItem('cl_bal')) || 0;
+        let luck = false;
+
+        function go(id, el) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('on'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('on');
+        }
+
+        function runCode() {
+            let cmd = document.getElementById('find').value.toLowerCase();
+            if (cmd.includes('give')) {
+                let n = parseInt(cmd.replace('give ', '')) || 0;
+                add(n);
+                alert('Выдано: ' + n);
+            } else if (cmd === 'luck') {
+                luck = true;
+                alert('Удача активирована!');
+            }
+            document.getElementById('find').value = '';
+        }
+
+        function spawn() {
+            if (!document.getElementById('game-view').classList.contains('active')) return;
+            const c = document.createElement('div');
+            c.className = 'clover';
+            c.innerHTML = (luck && Math.random() < 0.35) ? '🌟' : '🍀';
+            c.style.left = Math.random() * (window.innerWidth - 50) + 'px';
+            c.style.top = '-50px';
+            document.getElementById('game-view').appendChild(c);
+            let y = -50;
+            let fall = setInterval(() => {
+                y += 1.5;
+                c.style.top = y + 'px';
+                if (y > window.innerHeight) { clearInterval(fall); c.remove(); }
+            }, 16);
+            c.onclick = () => { bal += 2; update(); c.remove(); };
+        }
+
+        function add(n) { bal += n; update(); }
+        function update() {
+            document.getElementById('val').innerText = bal.toLocaleString();
+            document.querySelectorAll('.sync').forEach(s => s.innerText = bal.toLocaleString());
+            localStorage.setItem('cl_bal', bal);
+        }
+
+        setInterval(() => { spawn(); spawn(); }, 1200);
+        update();
+    </script>
 </body>
 </html>
