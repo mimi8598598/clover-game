@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Lite</title>
+    <title>Clover Lite Fix</title>
     <style>
         :root { --gold: #ffd700; }
         body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
@@ -19,14 +19,18 @@
         /* Экраны */
         .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 70px); background: #000; z-index: 200; padding: 20px; box-sizing: border-box; }
         .active { display: block; }
-        .card { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #222; }
+        .card { background: #111; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Кнопки */
+        .btn { background: var(--gold); color: black; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn:disabled { background: #333; color: #777; cursor: default; }
 
         /* Навигация */
         #nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #0a0a0a; display: flex; z-index: 300; border-top: 1px solid #222; }
         .nav-item { flex: 1; text-align: center; padding-top: 15px; color: #555; cursor: pointer; font-size: 12px; }
         .nav-item.on { color: var(--gold); }
 
-        /* Поиск в настройках */
+        /* Поиск */
         .search-box { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: #0f0; border-radius: 8px; margin-bottom: 10px; }
     </style>
 </head>
@@ -40,23 +44,28 @@
 
     <div id="scr-bank" class="screen">
         <h2 style="text-align:center; color:var(--gold);">БАНК</h2>
-        <div class="card" style="text-align:center;">
-            <p>Ваш баланс:</p>
+        <div class="card" style="flex-direction: column; text-align: center;">
+            <p>Баланс счета:</p>
             <h1 style="color:var(--gold);">🍀 <span class="sync">0</span></h1>
         </div>
     </div>
 
     <div id="scr-tasks" class="screen">
         <h2 style="text-align:center; color:var(--gold);">ЗАДАНИЯ</h2>
-        <div class="card">Подписка на ТГ <button onclick="add(10000)" style="float:right;">ВЗЯТЬ</button></div>
-        <div class="card">Лайк на видео <button onclick="add(2000)" style="float:right;">ВЗЯТЬ</button></div>
+        <div class="card">
+            <span>Подписка на ТГ (+10к)</span>
+            <button class="btn" onclick="completeTask(this, 10000)">ВЗЯТЬ</button>
+        </div>
+        <div class="card">
+            <span>Лайк (+2к)</span>
+            <button class="btn" onclick="completeTask(this, 2000)">ВЗЯТЬ</button>
+        </div>
     </div>
 
     <div id="scr-set" class="screen">
-        <h2 style="text-align:center; color:var(--gold);">ПОИСК</h2>
-        <input type="text" id="find" class="search-box" placeholder="Введите код...">
-        <button onclick="runCode()" style="width:100%; padding:12px; background:var(--gold); border:none; border-radius:8px; font-weight:bold;">ВЫПОЛНИТЬ</button>
-        <p style="color:#444; font-size:12px; text-align:center; margin-top:20px;">Версия игры: Lite 1.0</p>
+        <h2 style="text-align:center; color:var(--gold);">КОМАНДЫ</h2>
+        <input type="text" id="find" class="search-box" placeholder="Напр: give 5000">
+        <button class="btn" style="width:100%" onclick="runCode()">ВЫПОЛНИТЬ</button>
     </div>
 
     <div id="nav">
@@ -77,11 +86,21 @@
             el.classList.add('on');
         }
 
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ЗАДАНИЙ
+        function completeTask(btn, reward) {
+            bal += reward;
+            update();
+            btn.innerText = "ГОТОВО";
+            btn.disabled = true;
+            alert("Награда получена: " + reward.toLocaleString());
+        }
+
         function runCode() {
             let cmd = document.getElementById('find').value.toLowerCase();
             if (cmd.includes('give')) {
                 let n = parseInt(cmd.replace('give ', '')) || 0;
-                add(n);
+                bal += n;
+                update();
                 alert('Выдано: ' + n);
             } else if (cmd === 'luck') {
                 luck = true;
@@ -107,7 +126,6 @@
             c.onclick = () => { bal += 2; update(); c.remove(); };
         }
 
-        function add(n) { bal += n; update(); }
         function update() {
             document.getElementById('val').innerText = bal.toLocaleString();
             document.querySelectorAll('.sync').forEach(s => s.innerText = bal.toLocaleString());
