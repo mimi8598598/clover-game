@@ -244,26 +244,38 @@
             c.style.top = '-50px';
             document.getElementById('game-view').appendChild(c);
             let y = -50;
-            let f = set('div');
-        el.id = 'global-msg';
-        el.style = "display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);background:gold;color:black;padding:15px 30px;border-radius:50px;font-weight:bold;z-index:1000;box-shadow:0 0 20px #ffd700;text-align:center;";
-        document.body.appendChild(el);
-    }
-    el.innerText = text; el.style.display = 'block';
-    setTimeout(() => { el.style.display = 'none'; }, 5000);
+                let f = setInterval(() => {
+        y += 2.5; c.style.top = y + 'px';
+        if(y > window.innerHeight){ clearInterval(f); c.remove(); }
+    }, 16);
+    c.onclick = () => { score += 10; refresh(); c.remove(); };
 }
 
-// Эта функция заменит ту, что была выше, так как она объявлена позже
+function refresh() {
+    document.getElementById('val').innerText = score.toLocaleString();
+    localStorage.setItem('cl_score', score);
+}
+
+function showGlobal(text) {
+    let el = document.getElementById('global-msg');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'global-msg';
+        el.style = "display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);background:gold;color:black;padding:15px 30px;border-radius:50px;font-weight:bold;z-index:1000;box-shadow:0 0 20px gold;text-align:center;";
+        document.body.appendChild(el);
+    }
+    el.innerText = text;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
 
 function applyCode(btnCommand) {
     let input = document.getElementById('find');
     let v = btnCommand || (input ? input.value.trim() : ""); 
-    
     if (!v.startsWith('/')) { 
         if(!btnCommand) alert("Используй /команда"); 
         return; 
     }
-    
     let args = v.split(' ');
     let cmd = args[0].toLowerCase();
 
@@ -272,23 +284,18 @@ function applyCode(btnCommand) {
         showGlobal("👑 АДМИН-РЕЖИМ ВКЛЮЧЕН");
     } 
     else if (cmd === '/top') {
-        let players = [];
-        players.push({n: "Mimi (Ты)", s: score});
-        
-        const names = ["Killer", "Lucky", "Richie", "Shadow", "Ghost", "King", "BrawlBot", "CloverX", "Zeta"];
+        let players = [{n: "Mimi (Ты)", s: score}];
+        const names = ["Killer", "Lucky", "Richie", "Shadow", "Ghost", "King", "BrawlBot"];
         for (let i = 1; i <= 99; i++) {
-            let randomName = names[Math.floor(Math.random() * names.length)] + "_" + (100 + i);
-            let randomScore = Math.floor(Math.random() * 50000000) + 10000;
-            players.push({n: randomName, s: randomScore});
+            players.push({
+                n: names[Math.floor(Math.random() * names.length)] + "_" + (100 + i),
+                s: Math.floor(Math.random() * 50000000) + 10000
+            });
         }
-
         players.sort((a, b) => b.s - a.s);
-
         let text = "🏆 ТОП-100 МАГНАТОВ:\n\n";
-        players.forEach((p, i) => {
-            if (i < 100) {
-                text += `${i + 1}. ${p.n}: ${p.s.toLocaleString()} 🍀\n`;
-            }
+        players.slice(0, 100).forEach((p, i) => {
+            text += `${i + 1}. ${p.n}: ${p.s.toLocaleString()} 🍀\n`;
         });
         alert(text);
     }
@@ -296,12 +303,12 @@ function applyCode(btnCommand) {
         score += parseInt(args[1]) || 0;
         showGlobal("💰 Баланс обновлен");
     }
-
     if(input && !btnCommand) input.value = ""; 
     refresh();
 }
 
-// Обязательно добавь эти строки в самый конец, если их нет!
+setInterval(spawn, 1000);
+refresh();
 </script>
 </body>
 </html>
