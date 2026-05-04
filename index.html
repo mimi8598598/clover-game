@@ -75,7 +75,27 @@
         <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
         
         <p style="color:#666; font-size: 14px;">ПОИСК И АКТИВАЦИЯ КОДОВ:</p>
-        <input type="text" id="find" class="search-box" placeholder="Напиши: give 50000">
+            <div id="scr-set" class="screen">
+        <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
+        
+        <p style="color:#666; font-size: 14px;">ПОИСК И АКТИВАЦИЯ КОДОВ:</p>
+        <input type="text" id="find" class="search-box" placeholder="Введите код здесь...">
+        <button class="btn" style="width:100%; margin-bottom: 30px;" onclick="runCode()">АКТИВИРОВАТЬ</button>
+
+        <div class="card">
+            <span>🌍 Язык системы</span>
+            <button class="btn" id="lang-btn" onclick="toggleLang()">РУССКИЙ</button>
+        </div>
+        <div class="card">
+            <span>🔊 Звуковые эффекты</span>
+            <button class="btn" id="sound-btn" onclick="toggleSound()">ВКЛ</button>
+        </div>
+        <div class="card">
+            <span>🌙 Темная тема</span>
+            <button class="btn" disabled>АКТИВНО</button>
+        </div>
+    </div>
+
         <button class="btn" style="width:100%; margin-bottom: 30px;" onclick="runCode()">АКТИВИРОВАТЬ</button>
 
         <div class="card">
