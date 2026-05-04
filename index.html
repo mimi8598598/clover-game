@@ -3,90 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Heist Pro</title>
+    <title>Clover Heist: Safe Cracker</title>
     <style>
-        :root { --gold: #ffd700; --red: #ff3333; }
-        body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
-        #game-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: radial-gradient(circle, #051a05, #000); }
-        .clover { position: absolute; font-size: 45px; cursor: pointer; z-index: 5; }
-        #top { position: fixed; top: 20px; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
-        #bal-display { display: inline-block; padding: 12px 30px; background: rgba(0,0,0,0.85); border: 2px solid var(--gold); border-radius: 50px; color: var(--gold); font-size: 30px; font-weight: bold; pointer-events: auto; }
-        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 80px); background: #000; z-index: 200; padding: 25px; box-sizing: border-box; overflow-y: auto; }
+        :root { --gold: #ffd700; --red: #ff4444; --green: #00ff88; --bg: #0a0a0a; --panel: #161616; }
+        body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; }
+        
+        #game-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: radial-gradient(circle, #1a2a1a, #000); }
+        .clover { position: absolute; font-size: 40px; cursor: pointer; z-index: 5; }
+        
+        #top { position: fixed; top: 15px; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
+        #bal-display { display: inline-block; padding: 10px 25px; background: rgba(0,0,0,0.9); border: 1px solid var(--gold); border-radius: 15px; color: var(--gold); font-size: 24px; font-weight: 900; pointer-events: auto; }
+
+        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 80px); background: var(--bg); z-index: 200; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         .active { display: block; }
-        .card { background: #111; padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #222; text-align: center; }
-        .btn { background: var(--gold); color: black; border: none; padding: 15px 25px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; }
-        .btn:disabled { background: #222; color: #555; }
-        .search-box { width: 100%; padding: 15px; background: #0a0a0a; border: 1px solid #333; color: #0f0; border-radius: 12px; margin-bottom: 15px; font-size: 18px; box-sizing: border-box; }
-        #nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #080808; display: flex; z-index: 300; border-top: 1px solid #1a1a1a; }
-        .nav-item { flex: 1; text-align: center; padding-top: 18px; color: #444; cursor: pointer; font-size: 12px; }
+
+        /* МИНИ-ИГРА ВЗЛОМА */
+        #safe-game { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 500; flex-direction: column; align-items: center; justify-content: center; }
+        .lock-container { width: 250px; height: 250px; border: 10px solid #333; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; }
+        .lock-target { position: absolute; width: 50px; height: 50px; background: var(--green); border-radius: 50%; opacity: 0.4; }
+        .lock-indicator { position: absolute; width: 10px; height: 120px; background: white; transform-origin: bottom center; bottom: 50%; border-radius: 5px; box-shadow: 0 0 10px white; }
+        .lock-status { margin-top: 30px; font-size: 18px; letter-spacing: 5px; color: var(--gold); }
+
+        .heist-item { background: #1f1f1f; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid #333; position: relative; }
+        .unlocked { border-left-color: var(--gold); cursor: pointer; }
+        .cooldown { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; color:var(--red); font-size:24px; border-radius:12px; }
+
+        #nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #0a0a0a; display: flex; z-index: 300; border-top: 1px solid #222; }
+        .nav-item { flex: 1; text-align: center; padding-top: 18px; color: #555; }
         .nav-item.on { color: var(--gold); }
-        .nav-item b { font-size: 24px; display: block; margin-bottom: 4px; }
+        .nav-item b { font-size: 24px; display: block; }
     </style>
 </head>
 <body>
+
     <div id="top"><div id="bal-display">🍀 <span id="val">0</span></div></div>
-    <div id="game-view" class="screen active"></div>
-    <div id="scr-bank" class="screen">
-        <h2 style="text-align:center; color:var(--gold);">🏦 БАНК</h2>
-        <div class="card"><span>На счету:</span><h1 style="color: var(--gold);">🍀 <span class="sync">0</span></h1></div>
+
+    <!-- МИНИ-ИГРА (ВСПЛЫВАЮЩАЯ) -->
+    <div id="safe-game" onclick="checkLock()">
+        <h2 id="safe-title" style="color:white; margin-bottom:10px;">ВЗЛОМ...</h2>
+        <p style="color:#888; margin-bottom:20px;">Жми, когда стрелка на зеленом!</p>
+        <div class="lock-container">
+            <div class="lock-target" id="target"></div>
+            <div class="lock-indicator" id="indicator"></div>
+        </div>
+        <div class="lock-status" id="lock-dots">⚪ ⚪ ⚪</div>
     </div>
+
+    <div id="game-view" class="screen active"></div>
+
     <div id="scr-heist" class="screen">
-        <h2 style="text-align:center; color:var(--red);">🚨 ОГРАБЛЕНИЕ</h2>
-        <div class="card">
-            <div id="heist-status" style="margin-bottom: 15px;">Готов к делу?</div>
-            <div style="background:#000; padding:10px; border-radius:10px; margin-bottom:15px; font-size:13px;">
-                💰 ВЫИГРЫШ: <span style="color:lime">+250,000</span><br>
-                🚔 ТЮРЬМА: <span style="color:var(--red)">-100,000</span>
-            </div>
-            <button class="btn" id="heist-btn" onclick="startHeist()">НАЧАТЬ ОГРАБЛЕНИЕ</button>
+        <h2 style="color:var(--red); text-align:center;">🚨 КОНТРАКТЫ</h2>
+        <div class="heist-item unlocked" onclick="openSafeGame(0)">
+            <div class="cooldown" id="cd-0"></div>
+            <b>🏪 Магазин</b><br><small>Легко | +10,000 🍀</small>
+        </div>
+        <div class="heist-item unlocked" onclick="openSafeGame(1)">
+            <div class="cooldown" id="cd-1"></div>
+            <b>💎 Ювелирка</b><br><small>Средне | +80,000 🍀</small>
+        </div>
+        <div class="heist-item unlocked" onclick="openSafeGame(2)">
+            <div class="cooldown" id="cd-2"></div>
+            <b>🏢 Банк</b><br><small>СЛОЖНО | +500,000 🍀</small>
         </div>
     </div>
-    <div id="scr-set" class="screen">
-        <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
-        <input type="text" id="find" class="search-box" placeholder="">
-        <button class="btn" onclick="applyCode()">АКТИВИРОВАТЬ</button>
-    </div>
+
     <div id="nav">
-        <div class="nav-item on" onclick="tab('game-view', this)"><b>🎮</b>Игра</div>
-        <div class="nav-item" onclick="tab('scr-bank', this)"><b>🏦</b>Банк</div>
-        <div class="nav-item" onclick="tab('scr-heist', this)"><b>🚨</b>Дело</div>
-        <div class="nav-item" onclick="tab('scr-set', this)"><b>⚙️</b>Настройки</div>
+        <div class="nav-item on" onclick="tab('game-view', this)"><b>🍀</b></div>
+        <div class="nav-item" onclick="tab('scr-heist', this)"><b>🚨</b></div>
     </div>
+
     <script>
         let score = parseInt(localStorage.getItem('cl_score')) || 0;
+        let currentHeist = null;
+        let angle = 0;
+        let targetAngle = 0;
+        let speed = 2;
+        let successes = 0;
+        let gameActive = false;
+        let gameConfig = [
+            { win: 10000, lose: 5000, speed: 3, size: 60, cd: 5 },
+            { win: 80000, lose: 40000, speed: 5, size: 40, cd: 20 },
+            { win: 500000, lose: 250000, speed: 8, size: 25, cd: 60 }
+        ];
+
         function tab(id, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
             document.getElementById(id).classList.add('active');
             el.classList.add('on');
         }
-        function startHeist() {
-            const btn = document.getElementById('heist-btn');
-            const status = document.getElementById('heist-status');
-            btn.disabled = true;
-            status.innerText = "Взлом...";
-            setTimeout(() => {
-                if (Math.random() < 0.4) {
-                    score += 250000;
-                    status.innerHTML = "<b style='color:lime'>УДАЧНО! +250,000</b>";
+
+        function openSafeGame(idx) {
+            if(document.getElementById('cd-'+idx).style.display === 'flex') return;
+            currentHeist = idx;
+            successes = 0;
+            angle = 0;
+            speed = gameConfig[idx].speed;
+            
+            document.getElementById('safe-game').style.display = 'flex';
+            document.getElementById('lock-dots').innerText = "⚪ ⚪ ⚪";
+            setNewTarget();
+            gameActive = true;
+            requestAnimationFrame(updateGame);
+        }
+
+        function setNewTarget() {
+            targetAngle = Math.random() * 320 + 20;
+            const targetEl = document.getElementById('target');
+            const size = gameConfig[currentHeist].size;
+            targetEl.style.transform = `rotate(${targetAngle}deg) translateY(-100px)`;
+            // Визуально настраиваем область
+            targetEl.style.width = size + 'px';
+            targetEl.style.height = size + 'px';
+        }
+
+        function updateGame() {
+            if(!gameActive) return;
+            angle += speed;
+            if(angle >= 360) angle = 0;
+            document.getElementById('indicator').style.transform = `rotate(${angle}deg)`;
+            requestAnimationFrame(updateGame);
+        }
+
+        function checkLock() {
+            if(!gameActive) return;
+            
+            // Проверка попадания в диапазон (примерная логика углов)
+            let diff = Math.abs(angle - targetAngle);
+            let tolerance = gameConfig[currentHeist].size / 2;
+
+            if(diff < tolerance) {
+                successes++;
+                let dots = "";
+                for(let i=0; i<3; i++) dots += i < successes ? "🟢 " : "⚪ ";
+                document.getElementById('lock-dots').innerText = dots;
+                
+                if(successes >= 3) {
+                    endGame(true);
                 } else {
-                    score = Math.max(0, score - 100000);
-                    status.innerHTML = "<b style='color:red'>ПОЙМАЛИ! -100,000</b>";
+                    speed += 1; // Ускоряем следующий этап
+                    setNewTarget();
                 }
-                refresh();
-                let t = 10;
-                let c = setInterval(() => {
-                    btn.innerText = "ЖДАТЬ " + t + "с";
-                    t--;
-                    if(t < 0) { clearInterval(c); btn.disabled = false; btn.innerText = "НАЧАТЬ ОГРАБЛЕНИЕ"; status.innerText = "Готов?"; }
-                }, 1000);
-            }, 2000);
+            } else {
+                endGame(false);
+            }
         }
-        function applyCode() {
-            let i = document.getElementById('find').value.toLowerCase();
-            if(i.includes('give')){ score += parseInt(i.replace('give ','')) || 0; refresh(); }
-            document.getElementById('find').value = '';
+
+        function endGame(isWin) {
+            gameActive = false;
+            const cfg = gameConfig[currentHeist];
+            const safeTitle = document.getElementById('safe-title');
+
+            if(isWin) {
+                score += cfg.win;
+                safeTitle.innerText = "ВЗЛОМАНО!";
+                safeTitle.style.color = "var(--green)";
+            } else {
+                score = Math.max(0, score - cfg.lose);
+                safeTitle.innerText = "СИГНАЛИЗАЦИЯ!";
+                safeTitle.style.color = "var(--red)";
+            }
+
+            refresh();
+            setTimeout(() => {
+                document.getElementById('safe-game').style.display = 'none';
+                safeTitle.innerText = "ВЗЛОМ...";
+                safeTitle.style.color = "white";
+                startCooldown(currentHeist, cfg.cd);
+            }, 1500);
         }
+
+        function startCooldown(idx, sec) {
+            const cd = document.getElementById('cd-'+idx);
+            cd.style.display = 'flex';
+            let t = sec;
+            cd.innerText = t;
+            let itv = setInterval(() => {
+                t--;
+                cd.innerText = t;
+                if(t <= 0) { clearInterval(itv); cd.style.display = 'none'; }
+            }, 1000);
+        }
+
         function spawn() {
             if(!document.getElementById('game-view').classList.contains('active')) return;
             const c = document.createElement('div');
@@ -101,11 +199,12 @@
             }, 16);
             c.onclick = () => { score += 2; refresh(); c.remove(); };
         }
+
         function refresh() {
             document.getElementById('val').innerText = score.toLocaleString();
-            document.querySelectorAll('.sync').forEach(s => s.innerText = score.toLocaleString());
             localStorage.setItem('cl_score', score);
         }
+
         setInterval(spawn, 1000);
         refresh();
     </script>
