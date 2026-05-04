@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Quest Pro</title>
+    <title>Clover Quest 2026</title>
     <style>
         :root { --gold: #ffd700; --panel: #111; --green: #00ff00; }
         body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; }
@@ -11,9 +11,9 @@
         /* Игровое поле */
         #game-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: radial-gradient(circle, #051a05, #000); }
         .clover { position: absolute; font-size: 45px; cursor: pointer; z-index: 5; transition: transform 0.1s; }
-        .clover:active { transform: scale(1.5); }
+        .clover:active { transform: scale(1.4); }
 
-        /* Верхняя панель */
+        /* Баланс сверху */
         #top { position: fixed; top: 20px; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
         #bal-display { display: inline-block; padding: 12px 30px; background: rgba(0,0,0,0.85); border: 2px solid var(--gold); border-radius: 50px; color: var(--gold); font-size: 32px; font-weight: bold; pointer-events: auto; box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
 
@@ -22,16 +22,16 @@
         .active { display: block; }
         .card { background: var(--panel); padding: 18px; border-radius: 16px; margin-bottom: 12px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
 
-        /* Кнопки и интерфейс */
+        /* Кнопки и Инпуты */
         .btn { background: var(--gold); color: black; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .btn:disabled { background: #222; color: #555; }
-        .search-box { width: 100%; padding: 15px; background: #0a0a0a; border: 1px solid #333; color: var(--green); border-radius: 12px; margin-bottom: 15px; font-family: monospace; font-size: 16px; box-sizing: border-box; }
+        .btn:disabled { background: #222; color: #555; cursor: default; }
+        .search-box { width: 100%; padding: 15px; background: #0a0a0a; border: 1px solid #333; color: var(--green); border-radius: 12px; margin-bottom: 15px; font-family: monospace; font-size: 18px; box-sizing: border-box; }
 
         /* Навигация */
         #nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #080808; display: flex; z-index: 300; border-top: 1px solid #1a1a1a; }
-        .nav-item { flex: 1; text-align: center; padding-top: 18px; color: #444; cursor: pointer; font-size: 12px; transition: 0.2s; }
-        .nav-item.on { color: var(--gold); background: rgba(255, 215, 0, 0.03); }
-        .nav-item b { font-size: 26px; display: block; margin-bottom: 4px; }
+        .nav-item { flex: 1; text-align: center; padding-top: 18px; color: #444; cursor: pointer; font-size: 12px; }
+        .nav-item.on { color: var(--gold); }
+        .nav-item b { font-size: 24px; display: block; margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -40,166 +40,122 @@
         <div id="bal-display">🍀 <span id="val">0</span></div>
     </div>
 
-    <!-- ИГРА -->
+    <!-- ЭКРАН ИГРЫ -->
     <div id="game-view" class="screen active"></div>
 
-    <!-- БАНК -->
+    <!-- ЭКРАН БАНКА -->
     <div id="scr-bank" class="screen">
-        <h2 style="text-align:center; color:var(--gold);">🏦 МОЙ БАНК</h2>
+        <h2 style="text-align:center; color:var(--gold);">🏦 БАНК</h2>
         <div class="card" style="flex-direction: column; padding: 40px 20px;">
-            <span style="color: #666;">Баланс клеверов</span>
+            <span style="color: #666;">Текущий счет</span>
             <h1 style="font-size: 48px; color: var(--gold); margin: 15px 0;">🍀 <span class="sync">0</span></h1>
-            <small style="color: #333;">ACCOUNT ID: 5757</small>
         </div>
     </div>
 
-    <!-- ЗАДАНИЯ -->
+    <!-- ЭКРАН ЗАДАНИЙ -->
     <div id="scr-tasks" class="screen">
         <h2 style="text-align:center; color:var(--gold);">📋 ЗАДАНИЯ</h2>
         <div class="card">
-            <div><b>🎁 Ежедневный бонус</b><br><small>+5,000 🍀</small></div>
-            <button class="btn" onclick="doTask(this, 5000)">ВЗЯТЬ</button>
+            <div><b>🎁 Бонус новичка</b><br><small>+5,000 🍀</small></div>
+            <button class="btn" onclick="takeTask(this, 5000)">ВЗЯТЬ</button>
         </div>
         <div class="card">
-            <div><b>👥 Вступить в Клан</b><br><small>+15,000 🍀</small></div>
-            <button class="btn" onclick="doTask(this, 15000)">ВСТУПИТЬ</button>
-        </div>
-        <div class="card">
-            <div><b>📺 Рекламная пауза</b><br><small>+8,000 🍀</small></div>
-            <button class="btn" onclick="doTask(this, 8000)">СМОТРЕТЬ</button>
+            <div><b>🌟 Супер Приз</b><br><small>+50,000 🍀</small></div>
+            <button class="btn" onclick="takeTask(this, 50000)">ВЗЯТЬ</button>
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ (ЯЗЫК И КОДЫ) -->
+    <!-- ЭКРАН НАСТРОЕК -->
     <div id="scr-set" class="screen">
         <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
         
-        <p style="color:#666; font-size: 14px;">ПОИСК И АКТИВАЦИЯ КОДОВ:</p>
-            <div id="scr-set" class="screen">
-        <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
-        
-        <p style="color:#666; font-size: 14px;">ПОИСК И АКТИВАЦИЯ КОДОВ:</p>
-        <input type="text" id="find" class="search-box" placeholder="Введите код здесь...">
-        <button class="btn" style="width:100%; margin-bottom: 30px;" onclick="runCode()">АКТИВИРОВАТЬ</button>
+        <p style="color:#666; font-size: 14px;">АКТИВАЦИЯ КОДОВ:</p>
+        <!-- Поле теперь абсолютно пустое, как ты просил -->
+        <input type="text" id="find" class="search-box" placeholder="">
+        <button class="btn" style="width:100%; margin-bottom: 30px;" onclick="applyCode()">АКТИВИРОВАТЬ</button>
 
         <div class="card">
             <span>🌍 Язык системы</span>
-            <button class="btn" id="lang-btn" onclick="toggleLang()">РУССКИЙ</button>
+            <button class="btn">РУССКИЙ</button>
         </div>
         <div class="card">
-            <span>🔊 Звуковые эффекты</span>
-            <button class="btn" id="sound-btn" onclick="toggleSound()">ВКЛ</button>
-        </div>
-        <div class="card">
-            <span>🌙 Темная тема</span>
-            <button class="btn" disabled>АКТИВНО</button>
+            <span>🔊 Звук</span>
+            <button class="btn">ВКЛ</button>
         </div>
     </div>
 
-        <button class="btn" style="width:100%; margin-bottom: 30px;" onclick="runCode()">АКТИВИРОВАТЬ</button>
-
-        <div class="card">
-            <span>🌍 Язык системы</span>
-            <button class="btn" id="lang-btn" onclick="toggleLang()">РУССКИЙ</button>
-        </div>
-        <div class="card">
-            <span>🔊 Звуковые эффекты</span>
-            <button class="btn" id="sound-btn" onclick="toggleSound()">ВКЛ</button>
-        </div>
-        <div class="card">
-            <span>🌙 Темная тема</span>
-            <button class="btn" disabled>АКТИВНО</button>
-        </div>
-    </div>
-
-    <!-- МЕНЮ -->
+    <!-- НИЖНЕЕ МЕНЮ -->
     <div id="nav">
-        <div class="nav-item on" onclick="go('game-view', this)"><b>🎮</b>Игра</div>
-        <div class="nav-item" onclick="go('scr-bank', this)"><b>🏦</b>Банк</div>
-        <div class="nav-item" onclick="go('scr-tasks', this)"><b>📋</b>Задания</div>
-        <div class="nav-item" onclick="go('scr-set', this)"><b>⚙️</b>Настройки</div>
+        <div class="nav-item on" onclick="tab('game-view', this)"><b>🎮</b>Игра</div>
+        <div class="nav-item" onclick="tab('scr-bank', this)"><b>🏦</b>Банк</div>
+        <div class="nav-item" onclick="tab('scr-tasks', this)"><b>📋</b>Задания</div>
+        <div class="nav-item" onclick="tab('scr-set', this)"><b>⚙️</b>Настройки</div>
     </div>
 
     <script>
-        let bal = parseInt(localStorage.getItem('cl_bal')) || 0;
-        let luck = false;
-        let lang = 'RU';
-        let sound = true;
+        let score = parseInt(localStorage.getItem('cl_score')) || 0;
+        let isLucky = false;
 
-        function go(id, el) {
+        function tab(id, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('on'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
             document.getElementById(id).classList.add('active');
             el.classList.add('on');
         }
 
-        // Функции настроек
-        function toggleLang() {
-            lang = (lang === 'RU') ? 'EN' : 'RU';
-            document.getElementById('lang-btn').innerText = (lang === 'RU') ? 'РУССКИЙ' : 'ENGLISH';
-        }
-
-        function toggleSound() {
-            sound = !sound;
-            document.getElementById('sound-btn').innerText = sound ? 'ВКЛ' : 'ВЫКЛ';
-        }
-
-        function doTask(btn, reward) {
-            bal += reward;
-            update();
+        function takeTask(btn, reward) {
+            score += reward;
+            refresh();
             btn.innerText = "ГОТОВО";
             btn.disabled = true;
-            btn.style.background = "#222";
         }
 
-        function runCode() {
-            let cmd = document.getElementById('find').value.toLowerCase();
-            if (cmd.includes('give')) {
-                let n = parseInt(cmd.replace('give ', '')) || 0;
-                bal += n;
-                update();
-                alert('Успех! Клеверы добавлены.');
-            } else if (cmd === 'luck') {
-                luck = true;
-                alert('Удача 35% включена!');
-            } else {
-                alert('Код не найден');
+        function applyCode() {
+            let input = document.getElementById('find').value.toLowerCase();
+            if (input.includes('give')) {
+                let num = parseInt(input.replace('give ', '')) || 0;
+                score += num;
+                refresh();
+                alert('Код принят: +' + num);
+            } else if (input === 'luck') {
+                isLucky = true;
+                alert('Удача активирована!');
             }
             document.getElementById('find').value = '';
         }
 
         function spawn() {
             if (!document.getElementById('game-view').classList.contains('active')) return;
-            const c = document.createElement('div');
-            c.className = 'clover';
-            const isG = luck ? (Math.random() < 0.35) : (Math.random() < 0.05);
-            c.innerHTML = isG ? '🌟' : '🍀';
-            c.style.left = Math.random() * (window.innerWidth - 60) + 'px';
-            c.style.top = '-60px';
-            document.getElementById('game-view').appendChild(c);
+            const item = document.createElement('div');
+            item.className = 'clover';
+            const special = isLucky ? Math.random() < 0.35 : Math.random() < 0.05;
+            item.innerHTML = special ? '🌟' : '🍀';
+            item.style.left = Math.random() * (window.innerWidth - 60) + 'px';
+            item.style.top = '-60px';
+            document.getElementById('game-view').appendChild(item);
             
-            let y = -60;
+            let pos = -60;
             let fall = setInterval(() => {
-                y += 2;
-                c.style.top = y + 'px';
-                if (y > window.innerHeight) { clearInterval(fall); c.remove(); }
+                pos += 2.5;
+                item.style.top = pos + 'px';
+                if (pos > window.innerHeight) { clearInterval(fall); item.remove(); }
             }, 16);
             
-            c.onclick = () => { 
-                bal += isG ? 100 : 2; 
-                update(); 
-                c.remove(); 
+            item.onclick = () => { 
+                score += special ? 100 : 2; 
+                refresh(); 
+                item.remove(); 
             };
         }
 
-        function update() {
-            document.getElementById('val').innerText = bal.toLocaleString();
-            document.querySelectorAll('.sync').forEach(s => s.innerText = bal.toLocaleString());
-            localStorage.setItem('cl_bal', bal);
+        function refresh() {
+            document.getElementById('val').innerText = score.toLocaleString();
+            document.querySelectorAll('.sync').forEach(s => s.innerText = score.toLocaleString());
+            localStorage.setItem('cl_score', score);
         }
 
         setInterval(spawn, 1000);
-        update();
+        refresh();
     </script>
 </body>
 </html>
