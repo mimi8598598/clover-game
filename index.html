@@ -251,7 +251,46 @@
             localStorage.setItem('cl_score', score);
         }
 
-        setInterval(spawn, 1000); refresh();
+        setInterval(spawn, 1000); refresh();// --- СЕКРЕТНЫЙ АДМИН-БЛОК ---
+function showGlobal(text) {
+    let el = document.getElementById('global-msg');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'global-msg';
+        el.style = "display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);background:gold;color:black;padding:15px 30px;border-radius:50px;font-weight:bold;z-index:1000;box-shadow:0 0 20px #ffd700;text-align:center;";
+        document.body.appendChild(el);
+    }
+    el.innerText = text; el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+// Эта функция заменит ту, что была выше, так как она объявлена позже
+function applyCode() {
+    let input = document.getElementById('find');
+    let v = input.value.trim();
+    if (!v.startsWith('/')) { alert("Используй /команда"); return; }
+    let args = v.split(' ');
+    let cmd = args[0].toLowerCase();
+
+    if (cmd === '/6633') {
+        score += 5000000;
+        showGlobal("👑 РЕЖИМ АДМИНИСТРАТОРА ВКЛЮЧЕН");
+        // Пытаемся показать панель, если она есть
+        let ap = document.getElementById('admin-panel');
+        if(ap) ap.style.display = 'block';
+    } else if (cmd === '/global') {
+        showGlobal("📢 " + (args.slice(1).join(' ') || "Всем привет!"));
+    } else if (cmd === '/money') {
+        score += parseInt(args[1]) || 0;
+        showGlobal("💰 Баланс обновлен");
+    } else if (cmd === '/rand') {
+        let r = Math.floor(Math.random() * (parseInt(args[1]) || 1000)) + 1;
+        score += r;
+        showGlobal("🎲 Рандом: +" + r);
+    }
+    input.value = ""; refresh();
+}
+
     </script>
 </body>
 </html>
