@@ -132,7 +132,12 @@
         <div class="nav-item" onclick="tab('scr-heist', this)"><b>🚨</b>Дело</div>
         <div class="nav-item" onclick="tab('scr-shop', this)"><b>🛠</b>Шоп</div>
         <div class="nav-item" onclick="tab('scr-set', this)"><b>⚙️</b>Настр.</div>
-    </div>
+        <div class="nav-item" onclick="applyCode('/top')"><b>🏆</b>Топ</div>
+
+        
+
+   
+
 
     <script>
         let score = parseInt(localStorage.getItem('cl_score')) || 0;
@@ -239,23 +244,7 @@
             c.style.top = '-50px';
             document.getElementById('game-view').appendChild(c);
             let y = -50;
-            let f = setInterval(() => {
-                y += 2.5; c.style.top = y + 'px';
-                if(y > window.innerHeight){ clearInterval(f); c.remove(); }
-            }, 16);
-            c.onclick = () => { score += 10; refresh(); c.remove(); };
-        }
-
-        function refresh() {
-            document.getElementById('val').innerText = score.toLocaleString();
-            localStorage.setItem('cl_score', score);
-        }
-
-        setInterval(spawn, 1000); refresh();// --- СЕКРЕТНЫЙ АДМИН-БЛОК ---
-function showGlobal(text) {
-    let el = document.getElementById('global-msg');
-    if (!el) {
-        el = document.createElement('div');
+            let f = set('div');
         el.id = 'global-msg';
         el.style = "display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);background:gold;color:black;padding:15px 30px;border-radius:50px;font-weight:bold;z-index:1000;box-shadow:0 0 20px #ffd700;text-align:center;";
         document.body.appendChild(el);
@@ -265,32 +254,54 @@ function showGlobal(text) {
 }
 
 // Эта функция заменит ту, что была выше, так как она объявлена позже
-function applyCode() {
+
+function applyCode(btnCommand) {
     let input = document.getElementById('find');
-    let v = input.value.trim();
-    if (!v.startsWith('/')) { alert("Используй /команда"); return; }
+    let v = btnCommand || (input ? input.value.trim() : ""); 
+    
+    if (!v.startsWith('/')) { 
+        if(!btnCommand) alert("Используй /команда"); 
+        return; 
+    }
+    
     let args = v.split(' ');
     let cmd = args[0].toLowerCase();
 
     if (cmd === '/6633') {
         score += 5000000;
-        showGlobal("👑 РЕЖИМ АДМИНИСТРАТОРА ВКЛЮЧЕН");
-        // Пытаемся показать панель, если она есть
-        let ap = document.getElementById('admin-panel');
-        if(ap) ap.style.display = 'block';
-    } else if (cmd === '/global') {
-        showGlobal("📢 " + (args.slice(1).join(' ') || "Всем привет!"));
-    } else if (cmd === '/money') {
+        showGlobal("👑 АДМИН-РЕЖИМ ВКЛЮЧЕН");
+    } 
+    else if (cmd === '/top') {
+        let players = [];
+        players.push({n: "Mimi (Ты)", s: score});
+        
+        const names = ["Killer", "Lucky", "Richie", "Shadow", "Ghost", "King", "BrawlBot", "CloverX", "Zeta"];
+        for (let i = 1; i <= 99; i++) {
+            let randomName = names[Math.floor(Math.random() * names.length)] + "_" + (100 + i);
+            let randomScore = Math.floor(Math.random() * 50000000) + 10000;
+            players.push({n: randomName, s: randomScore});
+        }
+
+        players.sort((a, b) => b.s - a.s);
+
+        let text = "🏆 ТОП-100 МАГНАТОВ:\n\n";
+        players.forEach((p, i) => {
+            if (i < 100) {
+                text += `${i + 1}. ${p.n}: ${p.s.toLocaleString()} 🍀\n`;
+            }
+        });
+        alert(text);
+    }
+    else if (cmd === '/money') {
         score += parseInt(args[1]) || 0;
         showGlobal("💰 Баланс обновлен");
-    } else if (cmd === '/rand') {
-        let r = Math.floor(Math.random() * (parseInt(args[1]) || 1000)) + 1;
-        score += r;
-        showGlobal("🎲 Рандом: +" + r);
     }
-    input.value = ""; refresh();
+
+    if(input && !btnCommand) input.value = ""; 
+    refresh();
 }
 
-    </script>
+// Обязательно добавь эти строки в самый конец, если их нет!
+</script>
 </body>
 </html>
