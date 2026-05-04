@@ -252,7 +252,8 @@
 }
 
 function refresh() {
-    document.getElementById('val').innerText = score.toLocaleString();
+    let el = document.getElementById('val');
+    if (el) el.innerText = score.toLocaleString();
     localStorage.setItem('cl_score', score);
 }
 
@@ -272,10 +273,12 @@ function showGlobal(text) {
 function applyCode(btnCommand) {
     let input = document.getElementById('find');
     let v = btnCommand || (input ? input.value.trim() : ""); 
+    
     if (!v.startsWith('/')) { 
         if(!btnCommand) alert("Используй /команда"); 
         return; 
     }
+    
     let args = v.split(' ');
     let cmd = args[0].toLowerCase();
 
@@ -303,10 +306,12 @@ function applyCode(btnCommand) {
         score += parseInt(args[1]) || 0;
         showGlobal("💰 Баланс обновлен");
     }
+
     if(input && !btnCommand) input.value = ""; 
     refresh();
 }
 
+// Запуск основного цикла игры
 setInterval(spawn, 1000);
 refresh();
 </script>
