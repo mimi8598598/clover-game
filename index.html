@@ -3,105 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Quest 2.0</title>
+    <title>Clover Quest Pro</title>
     <style>
-        :root { --gold: #ffd700; --bg: #050a05; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        :root { --gold: #ffd700; --panel: #111; --green: #00ff00; }
+        body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; }
         
+        /* Игровое поле */
+        #game-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: radial-gradient(circle, #051a05, #000); }
+        .clover { position: absolute; font-size: 45px; cursor: pointer; z-index: 5; transition: transform 0.1s; }
+        .clover:active { transform: scale(1.5); }
+
+        /* Верхняя панель */
+        #top { position: fixed; top: 20px; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
+        #bal-display { display: inline-block; padding: 12px 30px; background: rgba(0,0,0,0.85); border: 2px solid var(--gold); border-radius: 50px; color: var(--gold); font-size: 32px; font-weight: bold; pointer-events: auto; box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
+
         /* Экраны */
-        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 70px); background: #000; z-index: 200; padding: 20px; box-sizing: border-box; }
+        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 80px); background: #000; z-index: 200; padding: 25px; box-sizing: border-box; overflow-y: auto; }
         .active { display: block; }
+        .card { background: var(--panel); padding: 18px; border-radius: 16px; margin-bottom: 12px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
 
-        /* Техработы (заглушка) */
-        #offline-screen { 
-            display: flex; /* Поменяй на 'none', чтобы включить игру */
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #000; z-index: 9999; flex-direction: column; 
-            align-items: center; justify-content: center; text-align: center;
-        }
+        /* Кнопки и интерфейс */
+        .btn { background: var(--gold); color: black; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        .btn:disabled { background: #222; color: #555; }
+        .search-box { width: 100%; padding: 15px; background: #0a0a0a; border: 1px solid #333; color: var(--green); border-radius: 12px; margin-bottom: 15px; font-family: monospace; font-size: 16px; box-sizing: border-box; }
 
-        /* Остальные стили интерфейса */
-        #game-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .clover { position: absolute; font-size: 40px; cursor: pointer; z-index: 5; }
-        #nav { position: fixed; bottom: 0; width: 100%; height: 70px; background: #0a0a0a; display: flex; z-index: 300; border-top: 1px solid #222; }
-        .nav-btn { flex: 1; text-align: center; padding-top: 15px; color: #555; cursor: pointer; font-size: 12px; }
-        .nav-btn.on { color: var(--gold); }
-        .console-input { width: 100%; padding: 15px; background: #111; border: 1px solid #333; color: #0f0; border-radius: 10px; margin-bottom: 10px; }
+        /* Навигация */
+        #nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #080808; display: flex; z-index: 300; border-top: 1px solid #1a1a1a; }
+        .nav-item { flex: 1; text-align: center; padding-top: 18px; color: #444; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .nav-item.on { color: var(--gold); background: rgba(255, 215, 0, 0.03); }
+        .nav-item b { font-size: 26px; display: block; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
-    <div id="offline-screen" style="display: flex;">
-        <h1 style="color:var(--gold);">🚧 ТЕХРАБОТЫ 🚧</h1>
-        <p>Игра временно отключена админом.<br>Зайдите позже!</p>
+    <div id="top">
+        <div id="bal-display">🍀 <span id="val">0</span></div>
     </div>
 
+    <!-- ИГРА -->
     <div id="game-view" class="screen active"></div>
 
+    <!-- БАНК -->
     <div id="scr-bank" class="screen">
-        <h2 style="text-align:center;color:var(--gold);">БАНК</h2>
-        <div style="background:#111; padding:20px; border-radius:15px; text-align:center; border:1px solid #222;">
-            <p>Баланс:</p>
-            <h1 style="color:var(--gold);">🍀 <span id="bank-val">0</span></h1>
+        <h2 style="text-align:center; color:var(--gold);">🏦 МОЙ БАНК</h2>
+        <div class="card" style="flex-direction: column; padding: 40px 20px;">
+            <span style="color: #666;">Баланс клеверов</span>
+            <h1 style="font-size: 48px; color: var(--gold); margin: 15px 0;">🍀 <span class="sync">0</span></h1>
+            <small style="color: #333;">ACCOUNT ID: 5757</small>
         </div>
     </div>
 
-    <div id="scr-set" class="screen">
-        <h2 style="text-align:center;color:var(--gold);">ПОИСК / КОМАНДЫ</h2>
-        <input type="text" id="cmd-input" class="console-input" placeholder="Введите команду...">
-        <button onclick="runCmd()" style="width:100%; padding:15px; background:var(--gold); border:none; border-radius:10px; font-weight:bold;">ВЫПОЛНИТЬ</button>
+    <!-- ЗАДАНИЯ -->
+    <div id="scr-tasks" class="screen">
+        <h2 style="text-align:center; color:var(--gold);">📋 ЗАДАНИЯ</h2>
+        <div class="card">
+            <div><b>🎁 Ежедневный бонус</b><br><small>+5,000 🍀</small></div>
+            <button class="btn" onclick="doTask(this, 5000)">ВЗЯТЬ</button>
+        </div>
+        <div class="card">
+            <div><b>👥 Вступить в Клан</b><br><small>+15,000 🍀</small></div>
+            <button class="btn" onclick="doTask(this, 15000)">ВСТУПИТЬ</button>
+        </div>
+        <div class="card">
+            <div><b>📺 Рекламная пауза</b><br><small>+8,000 🍀</small></div>
+            <button class="btn" onclick="doTask(this, 8000)">СМОТРЕТЬ</button>
+        </div>
     </div>
 
+    <!-- НАСТРОЙКИ (ЯЗЫК И КОДЫ) -->
+    <div id="scr-set" class="screen">
+        <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
+        
+        <p style="color:#666; font-size: 14px;">ПОИСК И АКТИВАЦИЯ КОДОВ:</p>
+        <input type="text" id="find" class="search-box" placeholder="Напиши: give 50000">
+        <button class="btn" style="width:100%; margin-bottom: 30px;" onclick="runCode()">АКТИВИРОВАТЬ</button>
+
+        <div class="card">
+            <span>🌍 Язык системы</span>
+            <button class="btn" id="lang-btn" onclick="toggleLang()">РУССКИЙ</button>
+        </div>
+        <div class="card">
+            <span>🔊 Звуковые эффекты</span>
+            <button class="btn" id="sound-btn" onclick="toggleSound()">ВКЛ</button>
+        </div>
+        <div class="card">
+            <span>🌙 Темная тема</span>
+            <button class="btn" disabled>АКТИВНО</button>
+        </div>
+    </div>
+
+    <!-- МЕНЮ -->
     <div id="nav">
-        <div class="nav-btn on" onclick="nav('game-view', this)">🎮<br>Игра</div>
-        <div class="nav-item" style="flex:1; text-align:center; color:#555; padding-top:15px;" onclick="nav('scr-bank', this)">🏦<br>Банк</div>
-        <div class="nav-btn" onclick="nav('scr-set', this)">⚙️<br>Настройки</div>
+        <div class="nav-item on" onclick="go('game-view', this)"><b>🎮</b>Игра</div>
+        <div class="nav-item" onclick="go('scr-bank', this)"><b>🏦</b>Банк</div>
+        <div class="nav-item" onclick="go('scr-tasks', this)"><b>📋</b>Задания</div>
+        <div class="nav-item" onclick="go('scr-set', this)"><b>⚙️</b>Настройки</div>
     </div>
 
     <script>
-        let bal = parseInt(localStorage.getItem('clover_bal')) || 0;
-        let isLuck = false;
+        let bal = parseInt(localStorage.getItem('cl_bal')) || 0;
+        let luck = false;
+        let lang = 'RU';
+        let sound = true;
 
-        function nav(id, el) {
+        function go(id, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'));
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('on'));
             document.getElementById(id).classList.add('active');
-            if(el.classList) el.classList.add('on');
+            el.classList.add('on');
         }
 
-        function runCmd() {
-            let val = document.getElementById('cmd-input').value.toLowerCase();
-            if (val.includes('give')) {
-                let amount = parseInt(val.replace('give ', '')) || 1000;
-                bal += amount;
-                alert('Выдано: ' + amount);
-            } else if (val === 'luck') {
-                isLuck = true;
-                alert('Удача 35% включена!');
-            }
+        // Функции настроек
+        function toggleLang() {
+            lang = (lang === 'RU') ? 'EN' : 'RU';
+            document.getElementById('lang-btn').innerText = (lang === 'RU') ? 'РУССКИЙ' : 'ENGLISH';
+        }
+
+        function toggleSound() {
+            sound = !sound;
+            document.getElementById('sound-btn').innerText = sound ? 'ВКЛ' : 'ВЫКЛ';
+        }
+
+        function doTask(btn, reward) {
+            bal += reward;
             update();
+            btn.innerText = "ГОТОВО";
+            btn.disabled = true;
+            btn.style.background = "#222";
+        }
+
+        function runCode() {
+            let cmd = document.getElementById('find').value.toLowerCase();
+            if (cmd.includes('give')) {
+                let n = parseInt(cmd.replace('give ', '')) || 0;
+                bal += n;
+                update();
+                alert('Успех! Клеверы добавлены.');
+            } else if (cmd === 'luck') {
+                luck = true;
+                alert('Удача 35% включена!');
+            } else {
+                alert('Код не найден');
+            }
+            document.getElementById('find').value = '';
         }
 
         function spawn() {
-            if (document.getElementById('offline-screen').style.display === 'flex') return;
+            if (!document.getElementById('game-view').classList.contains('active')) return;
             const c = document.createElement('div');
             c.className = 'clover';
-            c.innerHTML = isLuck ? '🌟' : '🍀';
-            c.style.left = Math.random() * (window.innerWidth - 50) + 'px';
-            c.style.top = '-50px';
+            const isG = luck ? (Math.random() < 0.35) : (Math.random() < 0.05);
+            c.innerHTML = isG ? '🌟' : '🍀';
+            c.style.left = Math.random() * (window.innerWidth - 60) + 'px';
+            c.style.top = '-60px';
             document.getElementById('game-view').appendChild(c);
-            let pos = -50;
+            
+            let y = -60;
             let fall = setInterval(() => {
-                pos += 2;
-                c.style.top = pos + 'px';
-                if (pos > window.innerHeight) { clearInterval(fall); c.remove(); }
+                y += 2;
+                c.style.top = y + 'px';
+                if (y > window.innerHeight) { clearInterval(fall); c.remove(); }
             }, 16);
-            c.onclick = () => { bal += 2; update(); c.remove(); };
+            
+            c.onclick = () => { 
+                bal += isG ? 100 : 2; 
+                update(); 
+                c.remove(); 
+            };
         }
 
         function update() {
-            document.getElementById('bank-val').innerText = bal.toLocaleString();
-            localStorage.setItem('clover_bal', bal);
+            document.getElementById('val').innerText = bal.toLocaleString();
+            document.querySelectorAll('.sync').forEach(s => s.innerText = bal.toLocaleString());
+            localStorage.setItem('cl_bal', bal);
         }
 
         setInterval(spawn, 1000);
