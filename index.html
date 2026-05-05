@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Tycoon</title>
+    <title>Clover Tycoon Slow</title>
     <style>
         :root { --gold: #ffd700; --green: #00ff88; --bg: #0a0a0a; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: manipulation; }
@@ -12,26 +12,23 @@
         .screen.on { display: block; }
 
         #game-view.on { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #val { font-size: 50px; color: var(--gold); font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.4); z-index: 10; position: relative; }
+        #val { font-size: 55px; color: var(--gold); font-weight: bold; text-shadow: 0 0 25px rgba(255,215,0,0.5); z-index: 10; position: relative; pointer-events: none; }
         
-        /* КЛЕВЕРЫ: МЕДЛЕННЫЙ ЛИСТОПАД */
+        /* КЛЕВЕРЫ: МЕДЛЕННЫЙ ПОЛЕТ */
         .clover { 
             position: absolute; 
             font-size: 45px; 
             cursor: pointer; 
             z-index: 5; 
             user-select: none;
-            top: -60px;
-            /* Настройка анимации на 7 секунд по умолчанию */
+            top: -10vh; /* Появление чуть выше экрана */
+            will-change: transform; /* Оптимизация плавности */
             animation: fall 7s linear forwards; 
-            transition: transform 0.1s;
         }
 
-        .clover:active { transform: scale(1.4); }
-
         @keyframes fall {
-            0% { transform: translateY(0) rotate(0deg); }
-            100% { transform: translateY(110vh) rotate(720deg); } /* Больше вращения для красоты */
+            from { transform: translateY(0) rotate(0deg); }
+            to { transform: translateY(115vh) rotate(360deg); }
         }
 
         .card { background: #161616; border: 1px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
@@ -39,7 +36,7 @@
         .btn { background: var(--gold); color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; text-transform: uppercase; }
         
         #nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #111; border-top: 1px solid #333; z-index: 100; }
-        .nav-item { flex: 1; text-align:center; padding: 18px 5px; cursor: pointer; color: #666; font-size: 11px; font-weight: bold; }
+        .nav-item { flex: 1; text-align:center; padding: 20px 5px; cursor: pointer; color: #666; font-size: 11px; font-weight: bold; }
         .nav-item.active { color: var(--gold); background: #1a1a1a; }
 
         /* УВЕДОМЛЕНИЕ */
@@ -74,17 +71,15 @@
     </div>
 
     <div id="game-view" class="screen on">
-        <div style="text-align:center; pointer-events: none;">
-            <div id="val">0</div>
-            <p style="color:#888; margin-top: 5px; letter-spacing: 2px;">CLOVERS</p>
-        </div>
+        <div id="val">0</div>
+        <p style="color:#888; margin-top: 5px; letter-spacing: 2px; pointer-events: none;">CLOVERS</p>
     </div>
 
     <div id="scr-shop" class="screen">
         <h2 style="color:var(--green); text-align:center;">🛠 МАГАЗИН</h2>
         <div class="card">
-            <b>🎭 Маска</b> <br><small>Скрывает твой прогресс</small>
-            <button class="btn" style="margin-top:15px;" onclick="showGlobal('Куплено!')">50,000 🍀</button>
+            <b>🎭 Маска</b> <br><small>Защита профиля</small>
+            <button class="btn" style="margin-top:15px;" onclick="showGlobal('Уже куплено!')">50,000 🍀</button>
         </div>
     </div>
 
@@ -94,7 +89,7 @@
             <input type="text" id="find" class="input-box" placeholder="Введи /команду...">
             <button class="btn" onclick="applyCode()">выполнить</button>
         </div>
-        <button class="btn" style="background: #cc0000; color: white;" onclick="resetGame()">СБРОСИТЬ ВСЁ</button>
+        <button class="btn" style="background: #cc0000; color: white;" onclick="resetGame()">ОБНУЛИТЬ ВСЁ</button>
     </div>
 
     <div id="nav">
@@ -105,8 +100,6 @@
 
     <script>
         let score = parseInt(localStorage.getItem('cl_score')) || 0;
-
-        // Картинка админа
         const adminImgHtml = `<img src="https://i.ibb.co/Xf8Y8mK/image-94.png" class="admin-icon" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1995/1995531.png'">`;
 
         function tab(id, el) {
@@ -116,27 +109,28 @@
             el.classList.add('active');
         }
 
-        // Спавн с падением 7 секунд
         function spawn() {
             if (!document.getElementById('game-view').classList.contains('on')) return;
             const c = document.createElement('div');
             c.className = 'clover';
             c.innerText = '🍀';
+            
+            // Случайная позиция по горизонтали
             c.style.left = Math.random() * (window.innerWidth - 60) + 'px';
             
-            // Устанавливаем ровно 7 секунд падения
-            const time = 7; 
-            c.style.animationDuration = time + 's';
+            // Ровно 7 секунд падения
+            c.style.animationDuration = '7s';
             
             c.onclick = function() {
                 score += 100;
                 refresh();
-                this.style.display = 'none'; // Мгновенно скрываем при клике
+                this.remove(); // Исчезает при клике
             };
+            
             document.getElementById('game-view').appendChild(c);
             
-            // Удаляем из памяти после завершения анимации
-            setTimeout(() => { if(c.parentNode) c.remove(); }, time * 1000);
+            // Удаляем объект после того как он точно покинул экран (8 сек для запаса)
+            setTimeout(() => { if(c.parentNode) c.remove(); }, 8000);
         }
 
         function showGlobal(text) {
@@ -148,7 +142,7 @@
         }
 
         function resetGame() {
-            if(confirm("Точно сбросить?")) { localStorage.clear(); location.reload(); }
+            if(confirm("Сбросить игру?")) { localStorage.clear(); location.reload(); }
         }
 
         function applyCode() {
@@ -158,9 +152,9 @@
             let args = v.split(' ');
             let cmd = args[0].toLowerCase();
 
-            if (cmd === '/6633') { score += 5000000; showGlobal("👑 АДМИН: +5M"); } 
+            if (cmd === '/6633') { score += 5000000; showGlobal("👑 +5,000,000!"); } 
             else if (cmd === '/money') {
-                let amt = parseInt(args[1]) || 10000;
+                let amt = parseInt(args[1]) || 50000;
                 score += amt;
                 showGlobal("💰 Выдано: " + amt.toLocaleString());
             }
@@ -175,8 +169,8 @@
             localStorage.setItem('cl_score', score);
         }
 
-        // Спавним чуть чаще (каждые 0.5 сек), так как они летят долго
-        setInterval(spawn, 500);
+        // Спавн каждые 0.6 сек для плотности потока
+        setInterval(spawn, 600);
         refresh();
     </script>
 </body>
