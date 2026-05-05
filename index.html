@@ -3,223 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Heist: 30 Languages Edition</title>
+    <title>Clover Tycoon Admin</title>
     <style>
-        :root { --gold: #ffd700; --red: #ff4444; --green: #00ff88; --bg: #0a0a0a; --panel: #161616; }
-        body { margin: 0; background: #000; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; }
+        :root { --gold: #ffd700; --bg: #0a0a0a; --panel: #161616; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: manipulation; }
         
-        #game-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: radial-gradient(circle, #1a2a1a, #000); }
-        .clover { position: absolute; font-size: 40px; cursor: pointer; z-index: 5; }
+        /* Экраны */
+        .screen { display: none; height: 100vh; width: 100vw; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .screen.on { display: block; }
+
+        /* Игра */
+        #game-view { text-align: center; display: none; }
+        #game-view.on { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #val { font-size: 40px; color: var(--gold); font-weight: bold; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .clover { position: absolute; font-size: 40px; cursor: pointer; z-index: 5; transition: transform 0.1s; }
+
+        /* Карточки и кнопки */
+        .card { background: var(--panel); border: 1px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
+        .btn { background: var(--gold); color: black; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; }
         
-        #top { position: fixed; top: 15px; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
-        #bal-display { display: inline-block; padding: 10px 25px; background: rgba(0,0,0,0.9); border: 1px solid var(--gold); border-radius: 15px; color: var(--gold); font-size: 24px; font-weight: 900; pointer-events: auto; }
+        /* Навигация */
+        #nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #111; border-top: 1px solid #333; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: #888; font-weight: bold; }
+        .nav-item.active { color: var(--gold); }
 
-        .screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: calc(100% - 80px); background: var(--bg); z-index: 200; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        .active { display: block; }
-
-        /* МИНИ-ИГРА ВЗЛОМА */
-        #safe-game { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 500; flex-direction: column; align-items: center; justify-content: center; }
-        .lock-container { width: 200px; height: 200px; border: 8px solid #333; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; }
-        .lock-target { position: absolute; width: 40px; height: 40px; background: var(--green); border-radius: 50%; opacity: 0.5; }
-        .lock-indicator { position: absolute; width: 6px; height: 90px; background: white; transform-origin: bottom center; bottom: 50%; border-radius: 5px; }
-
-        /* КАРТОЧКИ */
-        .card { background: #1f1f1f; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--gold); position: relative; }
-        .cooldown { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; color:var(--red); font-size:24px; font-weight:bold; border-radius:12px; }
-
-        /* НАСТРОЙКИ */
-        .input-box { width: 100%; padding: 15px; background: #000; border: 1px solid #333; color: var(--green); border-radius: 10px; margin-bottom: 10px; box-sizing: border-box; }
-        .lang-btn { background: #222; color: #fff; padding: 12px; border-radius: 10px; border: 1px solid #333; width: 100%; text-align: left; display: flex; justify-content: space-between; cursor: pointer; }
-        .lang-list { display: none; background: #111; border: 1px solid #333; border-radius: 10px; margin-top: 5px; max-height: 200px; overflow-y: auto; }
-        .lang-list div { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; cursor: pointer; }
-        .lang-list div:hover { background: #333; color: var(--gold); }
-        .show { display: block; }
-
-        /* НАВИГАЦИЯ */
-        #nav { position: fixed; bottom: 0; width: 100%; height: 80px; background: #0a0a0a; display: flex; z-index: 300; border-top: 1px solid #222; }
-        .nav-item { flex: 1; text-align: center; padding-top: 15px; color: #555; cursor: pointer; font-size: 11px; }
-        .nav-item.on { color: var(--gold); }
-        .nav-item b { font-size: 24px; display: block; margin-bottom: 2px; }
+        /* Подсказки */
+        #hints { position: absolute; bottom: 105%; left: 0; width: 100%; background: rgba(0,0,0,0.95); border: 1px solid var(--gold); border-radius: 10px; display: none; z-index: 1000; max-height: 200px; overflow-y: auto; }
+        #hints div { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="top"><div id="bal-display">🍀 <span id="val">0</span></div></div>
+    <!-- Уведомления -->
+    <div id="global-msg" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--gold);color:black;padding:12px 25px;border-radius:30px;font-weight:bold;z-index:2000;display:none;box-shadow:0 0 15px var(--gold);"></div>
 
-    <!-- МИНИ-ИГРА -->
-    <div id="safe-game" onclick="checkLock()">
-        <h2 id="safe-title" style="color:white;">ВЗЛОМ...</h2>
-        <div class="lock-container">
-            <div class="lock-target" id="target"></div>
-            <div class="lock-indicator" id="indicator"></div>
-        </div>
-        <div id="lock-dots" style="margin-top:20px; font-size:20px;">⚪ ⚪ ⚪</div>
-    </div>
-
-    <!-- ЭКРАНЫ -->
-    <div id="game-view" class="screen active"></div>
-
-    <div id="scr-heist" class="screen">
-        <h2 style="color:var(--red); text-align:center;">🚨 КОНТРАКТЫ</h2>
-        <div class="card" onclick="openSafeGame(0)">
-            <div class="cooldown" id="cd-0"></div>
-            <b>🏪 Магазин</b><br><small>+10,000 🍀</small>
-        </div>
-        <div class="card" onclick="openSafeGame(1)">
-            <div class="cooldown" id="cd-1"></div>
-            <b>💎 Ювелирный</b><br><small>+80,000 🍀</small>
-        </div>
-        <div class="card" onclick="openSafeGame(2)">
-            <div class="cooldown" id="cd-2"></div>
-            <b>🏢 Гос. Банк</b><br><small>+500,000 🍀</small>
+    <!-- ЭКРАН ИГРЫ -->
+    <div id="game-view" class="screen on">
+        <div style="margin-top: -50px;">
+            <p>Твой баланс:</p>
+            <div id="val">0</div>
+            <p>Нажимай на клеверы!</p>
         </div>
     </div>
 
+    <!-- ЭКРАН МАГАЗИНА -->
     <div id="scr-shop" class="screen">
-        <h2 style="color:var(--green); text-align:center;">🛠 МАГАЗИН</h2>
-        <div class="card" style="border-left-color:var(--green); display:flex; justify-content:space-between; align-items:center; cursor:default;">
-            <div><b>Маска</b><br><small style="color:#888">-30% штраф</small></div>
-            <button id="mask-btn" onclick="buy(50000, this)" style="background:var(--gold); border:none; padding:10px; border-radius:8px; font-weight:bold;">50K</button>
+        <h2 style="color:var(--gold); text-align:center;">🛠 МАГАЗИН</h2>
+        <div class="card">
+            <b>Маска</b><br><small>Снижает штрафы при ограблении</small>
+            <button class="btn" style="margin-top:10px;" onclick="alert('Куплено!')">50,000 🍀</button>
         </div>
     </div>
 
-        <!-- ЭКРАН НАСТРОЕК -->
+    <!-- ЭКРАН НАСТРОЕК -->
     <div id="scr-set" class="screen">
-        <div class="card" style="background: rgba(20,20,20,0.9); border: 1px solid #333; padding: 20px; border-radius: 15px;">
-            <h3 style="color: gold; margin-top: 0;">⚙️ Админ-панель</h3>
-            <p style="font-size: 14px; color: #ccc;">Введите / для списка команд:</p>
-            
+        <div class="card">
+            <h3 style="color: var(--gold); margin-top: 0;">⚙️ Админ-панель</h3>
             <div style="position:relative; margin-bottom: 15px;">
-                <input type="text" id="find" oninput="showHints(this.value)" placeholder="Введите /..." 
-                       style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid gold; background: #111; color: white; outline: none; box-sizing: border-box;">
-                
-                <!-- Меню подсказок (вылетает вверх) -->
-                <div id="hints" style="position:absolute; bottom:105%; left:0; width:100%; background:rgba(0,0,0,0.95); border:1px solid gold; border-radius:10px; display:none; z-index:1000; max-height:200px; overflow-y:auto; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);"></div>
+                <input type="text" id="find" oninput="showHints(this.value)" placeholder="Введите / для команд..." 
+                       style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--gold); background: #111; color: white; outline: none; box-sizing: border-box;">
+                <div id="hints"></div>
             </div>
-
-            <button class="btn" onclick="applyCode()" style="width: 100%; background: gold; color: black; font-weight: bold; padding: 12px; border: none; border-radius: 10px; cursor: pointer;">Выполнить</button>
+            <button class="btn" onclick="applyCode()">Выполнить</button>
         </div>
     </div>
 
-    <!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ (на случай если она была ниже 86 строки) -->
-    <div id="nav" style="position: fixed; bottom: 0; width: 100%; display: flex; background: #111; border-top: 1px solid #333; z-index: 100;">
-        <div class="nav-item" onclick="tab('game-view', this)" style="flex:1; text-align:center; padding:15px; cursor:pointer;">🎮 Игра</div>
-        <div class="nav-item" onclick="tab('scr-heist', this)" style="flex:1; text-align:center; padding:15px; cursor:pointer;">🚨 Дело</div>
-        <div class="nav-item" onclick="tab('scr-shop', this)" style="flex:1; text-align:center; padding:15px; cursor:pointer;">🛠 Шоп</div>
-        <div class="nav-item" onclick="tab('scr-set', this)" style="flex:1; text-align:center; padding:15px; cursor:pointer;">⚙️ Настр.</div>
+    <!-- МЕНЮ -->
+    <div id="nav">
+        <div class="nav-item active" onclick="tab('game-view', this)">🎮 Игра</div>
+        <div class="nav-item" onclick="tab('scr-shop', this)">🛠 Шоп</div>
+        <div class="nav-item" onclick="tab('scr-set', this)">⚙️ Настр.</div>
     </div>
 
     <script>
-        // Список команд
+        let score = parseInt(localStorage.getItem('cl_score')) || 0;
+
+        // Команды
         const commandList = [
             { cmd: '/random give ', desc: 'Раздать (кол-во сумма)' },
             { cmd: '/give money me ', desc: 'Выдать себе клеверы' },
             { cmd: '/bonus', desc: 'Получить подарок 🎁' },
             { cmd: '/say ', desc: 'Глобальный чат 📢' },
-            { cmd: '/clear me', desc: 'Обнулить свой баланс' },
-            { cmd: '/see', desc: 'Онлайн игроков' },
-            { cmd: '/top', desc: 'Таблица лидеров' }
+            { cmd: '/clear me', desc: 'Обнулить свой баланс' }
         ];
 
-        // Логика подсказок
+        function tab(id, el) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+            document.getElementById(id).classList.add('on');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function spawn() {
+            if (!document.getElementById('game-view').classList.contains('on')) return;
+            const c = document.createElement('div');
+            c.className = 'clover';
+            c.innerText = '🍀';
+            c.style.left = Math.random() * (window.innerWidth - 50) + 'px';
+            c.style.top = Math.random() * (window.innerHeight - 150) + 'px';
+            c.onclick = function() {
+                score += 100;
+                refresh();
+                this.remove();
+            };
+            document.getElementById('game-view').appendChild(c);
+            setTimeout(() => c.remove(), 3000);
+        }
+
         function showHints(val) {
             let hBox = document.getElementById('hints');
             if (val.startsWith('/')) {
                 hBox.innerHTML = '';
                 hBox.style.display = 'block';
                 commandList.forEach(item => {
-                    if (item.cmd.includes(val.toLowerCase())) {
-                        let div = document.createElement('div');
-                        div.style = "padding:12px; border-bottom: 1px solid #333; cursor:pointer; color: white;";
-                        div.innerHTML = `<span style="color:gold; font-weight:bold;">${item.cmd}</span><br><small style="color:#aaa;">${item.desc}</small>`;
-                        div.onclick = () => {
-                            document.getElementById('find').value = item.cmd;
-                            hBox.style.display = 'none';
-                            document.getElementById('find').focus();
-                        };
-                        hBox.appendChild(div);
-                    }
+                    let div = document.createElement('div');
+                    div.innerHTML = `<span style="color:gold;">${item.cmd}</span><br><small style="color:#aaa;">${item.desc}</small>`;
+                    div.onclick = () => {
+                        document.getElementById('find').value = item.cmd;
+                        hBox.style.display = 'none';
+                    };
+                    hBox.appendChild(div);
                 });
-            } else {
-                hBox.style.display = 'none';
-            }
+            } else { hBox.style.display = 'none'; }
         }
 
-        // Выполнение команд
-        function applyCode(btnCommand) {
-            let input = document.getElementById('find');
-            let v = btnCommand || (input ? input.value.trim() : ""); 
-            if (!v.startsWith('/')) return;
-            
+        function applyCode() {
+            let v = document.getElementById('find').value.trim();
             let args = v.split(' ');
             let cmd = args[0].toLowerCase();
 
-            // Команда раздачи
-            if (cmd === '/random' && args[1] === 'give') {
-                let count = parseInt(args[2]);
-                let amount = parseInt(args[3]);
-                if (!count || !amount) { alert("Пример: /random give 10 5000"); return; }
-                showGlobal(`🎲 Раздача! ${count} игроков получили по ${amount.toLocaleString()} 🍀`);
-            }
-            // Выдача себе
-            else if (cmd === '/give' && args[1] === 'money' && args[2] === 'me') {
-                let amt = parseInt(args[3]) || 0;
-                score += amt;
-                showGlobal(`💰 +${amt.toLocaleString()} 🍀`);
-            }
-            // Глобальное сообщение
-            else if (cmd === '/say') {
+            if (cmd === '/give' && args[2] === 'me') {
+                score += parseInt(args[3]) || 0;
+                showGlobal("💰 Баланс пополнен!");
+            } else if (cmd === '/random' && args[1] === 'give') {
+                showGlobal(`🎲 Раздача! ${args[2]} игроков получили по ${args[3]} 🍀`);
+            } else if (cmd === '/bonus') {
+                score += 5000; showGlobal("🎁 Бонус +5000!");
+            } else if (cmd === '/say') {
                 showGlobal("📢 " + args.slice(1).join(' '));
+            } else if (cmd === '/clear' && args[1] === 'me') {
+                score = 0; showGlobal("🗑 Сброшено");
             }
-            // Бонус
-            else if (cmd === '/bonus') {
-                let w = Math.floor(Math.random() * 5000) + 500;
-                score += w; showGlobal("🎁 Бонус: +" + w);
-            }
-            // Онлайн
-            else if (cmd === '/see') {
-                alert("📊 Сейчас онлайн: " + (Math.floor(Math.random() * 40) + 10) + " чел.");
-            }
-            // Топ
-            else if (cmd === '/top') {
-                let p = [{n: "Ты", s: score}];
-                for (let i = 1; i <= 99; i++) p.push({n: "Player_"+(100+i), s: Math.floor(Math.random() * 10000000)});
-                p.sort((a, b) => b.s - a.s);
-                alert("🏆 ТОП-50:\n\n" + p.slice(0, 50).map((i, idx) => `${idx+1}. ${i.n}: ${i.s.toLocaleString()}`).join('\n'));
-            }
-            // Сброс
-            else if (cmd === '/clear' && args[1] === 'me') {
-                if(confirm("Обнулить баланс?")) { score = 0; showGlobal("🗑 Сброшено"); }
-            }
-
-            if(input && !btnCommand) input.value = "";
-            if(document.getElementById('hints')) document.getElementById('hints').style.display = 'none';
+            document.getElementById('find').value = "";
             refresh();
         }
 
-        // Функции ядра
         function refresh() {
-            let el = document.getElementById('val');
-            if(el) el.innerText = score.toLocaleString();
+            document.getElementById('val').innerText = score.toLocaleString();
             localStorage.setItem('cl_score', score);
         }
 
         function showGlobal(t) {
             let e = document.getElementById('global-msg');
-            if(!e){
-                e = document.createElement('div'); e.id = 'global-msg';
-                e.style = "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:gold;color:black;padding:12px 25px;border-radius:30px;font-weight:bold;z-index:2000;box-shadow:0 0 15px gold;";
-                document.body.appendChild(e);
-            }
-            e.innerText = t; e.style.display='block';
-            setTimeout(()=> e.style.display='none', 4000);
-        }
-
-        function tab(id, el) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
-            document.getElementById(id).classList.add('on');
-            document.querySelectorAll('.nav-item').forEach(n => n.style.color = '#888');
-            el.style.color = 'gold';
+            e.innerText = t; e.style.display = 'block';
+            setTimeout(() => e.style.display = 'none', 3000);
         }
 
         setInterval(spawn, 1000);
