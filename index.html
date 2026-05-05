@@ -83,237 +83,147 @@
         </div>
     </div>
 
+        <!-- ЭКРАН НАСТРОЕК -->
     <div id="scr-set" class="screen">
-        <h2 style="color:var(--gold); text-align:center;">⚙️ НАСТРОЙКИ</h2>
-        <input type="text" id="find" class="input-box" placeholder="Введи чит-код...">
-        <button onclick="applyCode()" style="width:100%; padding:12px; background:var(--gold); border:none; border-radius:10px; font-weight:bold; margin-bottom:20px;">ОК</button>
-        
-        <p style="font-size:12px; color:#666;">ВЫБЕРИ ЯЗЫК (30):</p>
-        <div class="lang-btn" onclick="document.getElementById('lang-list').classList.toggle('show')">
-            <span id="cur-lang">РУССКИЙ</span><span>▼</span>
-        </div>
-        <div class="lang-list" id="lang-list">
-            <div onclick="setL('РУССКИЙ')">РУССКИЙ</div>
-            <div onclick="setL('ENGLISH')">ENGLISH</div>
-            <div onclick="setL('УКРАЇНСЬКА')">УКРАЇНСЬКА</div>
-            <div onclick="setL('POLSKI')">POLSKI</div>
-            <div onclick="setL('DEUTSCH')">DEUTSCH</div>
-            <div onclick="setL('FRANÇAIS')">FRANÇAIS</div>
-            <div onclick="setL('ESPAÑOL')">ESPAÑOL</div>
-            <div onclick="setL('ITALIANO')">ITALIANO</div>
-            <div onclick="setL('TÜRKÇE')">TÜRKÇE</div>
-            <div onclick="setL('PORTUGUÊS')">PORTUGUÊS</div>
-            <div onclick="setL('ҚАЗАҚША')">ҚАЗАҚША</div>
-            <div onclick="setL('БЕЛАРУСКАЯ')">БЕЛАРУСКАЯ</div>
-            <div onclick="setL('日本語')">日本語</div>
-            <div onclick="setL('한국어')">한국어</div>
-            <div onclick="setL('中文')">中文</div>
-            <div onclick="setL('العربية')">العربية</div>
-            <div onclick="setL('HINDI')">HINDI</div>
-            <div onclick="setL('NEDERLANDS')">NEDERLANDS</div>
-            <div onclick="setL('SVENSKA')">SVENSKA</div>
-            <div onclick="setL('NORSK')">NORSK</div>
-            <div onclick="setL('DANSK')">DANSK</div>
-            <div onclick="setL('SUOMI')">SUOMI</div>
-            <div onclick="setL('ČEŠTINA')">ČEŠTINA</div>
-            <div onclick="setL('MAGYAR')">MAGYAR</div>
-            <div onclick="setL('ROMÂNĂ')">ROMÂNĂ</div>
-            <div onclick="setL('EESTI')">EESTI</div>
-            <div onclick="setL('LATVIEŠU')">LATVIEŠU</div>
-            <div onclick="setL('LIETUVIŲ')">LIETUVIŲ</div>
-            <div onclick="setL('OʻZBEKCHA')">OʻZBEKCHA</div>
-            <div onclick="setL('AZERBAYCAN')">AZERBAYCAN</div>
+        <div class="card" style="background: rgba(20,20,20,0.9); border: 1px solid #333; padding: 20px; border-radius: 15px;">
+            <h3 style="color: gold; margin-top: 0;">⚙️ Админ-панель</h3>
+            <p style="font-size: 14px; color: #ccc;">Введите / для списка команд:</p>
+            
+            <div style="position:relative; margin-bottom: 15px;">
+                <input type="text" id="find" oninput="showHints(this.value)" placeholder="Введите /..." 
+                       style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid gold; background: #111; color: white; outline: none; box-sizing: border-box;">
+                
+                <!-- Меню подсказок (вылетает вверх) -->
+                <div id="hints" style="position:absolute; bottom:105%; left:0; width:100%; background:rgba(0,0,0,0.95); border:1px solid gold; border-radius:10px; display:none; z-index:1000; max-height:200px; overflow-y:auto; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);"></div>
+            </div>
+
+            <button class="btn" onclick="applyCode()" style="width: 100%; background: gold; color: black; font-weight: bold; padding: 12px; border: none; border-radius: 10px; cursor: pointer;">Выполнить</button>
         </div>
     </div>
 
-    <!-- НАВИГАЦИЯ -->
-    <div id="nav">
-        <div class="nav-item on" onclick="tab('game-view', this)"><b>🎮</b>Игра</div>
-        <div class="nav-item" onclick="tab('scr-heist', this)"><b>🚨</b>Дело</div>
-        <div class="nav-item" onclick="tab('scr-shop', this)"><b>🛠</b>Шоп</div>
-        <div class="nav-item" onclick="tab('scr-set', this)"><b>⚙️</b>Настр.</div>
-        <div class="nav-item" onclick="applyCode('/top')"><b>🏆</b>Топ</div>
-
-        
-
-   
-
+    <!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ (на случай если она была ниже 86 строки) -->
+    <div id="nav" style="position: fixed; bottom: 0; width: 100%; display: flex; background: #111; border-top: 1px solid #333; z-index: 100;">
+        <div class="nav-item" onclick="tab('game-view', this)" style="flex:1; text-align:center; padding:15px; cursor:pointer;">🎮 Игра</div>
+        <div class="nav-item" onclick="tab('scr-heist', this)" style="flex:1; text-align:center; padding:15px; cursor:pointer;">🚨 Дело</div>
+        <div class="nav-item" onclick="tab('scr-shop', this)" style="flex:1; text-align:center; padding:15px; cursor:pointer;">🛠 Шоп</div>
+        <div class="nav-item" onclick="tab('scr-set', this)" style="flex:1; text-align:center; padding:15px; cursor:pointer;">⚙️ Настр.</div>
+    </div>
 
     <script>
-        let score = parseInt(localStorage.getItem('cl_score')) || 0;
-        let hasMask = false;
-        let gameActive = false, successes = 0, angle = 0, targetAngle = 0, currentH = 0;
-        let configs = [
-            {w:10000, l:5000, s:3, sz:60, cd:10},
-            {w:80000, l:40000, s:5, sz:40, cd:30},
-            {w:500000, l:250000, s:8, sz:25, cd:60}
+        // Список команд
+        const commandList = [
+            { cmd: '/random give ', desc: 'Раздать (кол-во сумма)' },
+            { cmd: '/give money me ', desc: 'Выдать себе клеверы' },
+            { cmd: '/bonus', desc: 'Получить подарок 🎁' },
+            { cmd: '/say ', desc: 'Глобальный чат 📢' },
+            { cmd: '/clear me', desc: 'Обнулить свой баланс' },
+            { cmd: '/see', desc: 'Онлайн игроков' },
+            { cmd: '/top', desc: 'Таблица лидеров' }
         ];
 
-        function tab(id, el) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('on');
-            document.getElementById('lang-list').classList.remove('show');
-        }
-
-        function openSafeGame(idx) {
-            if(document.getElementById('cd-'+idx).style.display === 'flex') return;
-            currentH = idx; successes = 0; angle = 0; gameActive = true;
-            document.getElementById('safe-game').style.display = 'flex';
-            document.getElementById('lock-dots').innerText = "⚪ ⚪ ⚪";
-            setTarget(); requestAnimationFrame(update);
-        }
-
-        function setTarget() {
-            targetAngle = Math.random() * 300 + 30;
-            document.getElementById('target').style.transform = `rotate(${targetAngle}deg) translateY(-75px)`;
-            document.getElementById('target').style.width = configs[currentH].sz + 'px';
-            document.getElementById('target').style.height = configs[currentH].sz + 'px';
-        }
-
-        function update() {
-            if(!gameActive) return;
-            angle += configs[currentH].s + (successes * 1.2);
-            if(angle >= 360) angle = 0;
-            document.getElementById('indicator').style.transform = `rotate(${angle}deg)`;
-            requestAnimationFrame(update);
-        }
-
-        function checkLock() {
-            if(!gameActive) return;
-            let diff = Math.abs(angle - targetAngle);
-            if(diff < configs[currentH].sz / 2.5) {
-                successes++;
-                document.getElementById('lock-dots').innerText = "🟢 ".repeat(successes) + "⚪ ".repeat(3-successes);
-                if(successes >= 3) finish(true); else setTarget();
-            } else finish(false);
-        }
-
-        function finish(win) {
-            gameActive = false; let c = configs[currentH];
-            const title = document.getElementById('safe-title');
-            if(win) {
-                score += c.w;
-                title.innerText = "ВЗЛОМАНО!"; title.style.color = "var(--green)";
+        // Логика подсказок
+        function showHints(val) {
+            let hBox = document.getElementById('hints');
+            if (val.startsWith('/')) {
+                hBox.innerHTML = '';
+                hBox.style.display = 'block';
+                commandList.forEach(item => {
+                    if (item.cmd.includes(val.toLowerCase())) {
+                        let div = document.createElement('div');
+                        div.style = "padding:12px; border-bottom: 1px solid #333; cursor:pointer; color: white;";
+                        div.innerHTML = `<span style="color:gold; font-weight:bold;">${item.cmd}</span><br><small style="color:#aaa;">${item.desc}</small>`;
+                        div.onclick = () => {
+                            document.getElementById('find').value = item.cmd;
+                            hBox.style.display = 'none';
+                            document.getElementById('find').focus();
+                        };
+                        hBox.appendChild(div);
+                    }
+                });
             } else {
-                let loss = hasMask ? c.l * 0.7 : c.l;
-                score = Math.max(0, score - loss);
-                title.innerText = "ПРОВАЛ!"; title.style.color = "var(--red)";
+                hBox.style.display = 'none';
             }
+        }
+
+        // Выполнение команд
+        function applyCode(btnCommand) {
+            let input = document.getElementById('find');
+            let v = btnCommand || (input ? input.value.trim() : ""); 
+            if (!v.startsWith('/')) return;
+            
+            let args = v.split(' ');
+            let cmd = args[0].toLowerCase();
+
+            // Команда раздачи
+            if (cmd === '/random' && args[1] === 'give') {
+                let count = parseInt(args[2]);
+                let amount = parseInt(args[3]);
+                if (!count || !amount) { alert("Пример: /random give 10 5000"); return; }
+                showGlobal(`🎲 Раздача! ${count} игроков получили по ${amount.toLocaleString()} 🍀`);
+            }
+            // Выдача себе
+            else if (cmd === '/give' && args[1] === 'money' && args[2] === 'me') {
+                let amt = parseInt(args[3]) || 0;
+                score += amt;
+                showGlobal(`💰 +${amt.toLocaleString()} 🍀`);
+            }
+            // Глобальное сообщение
+            else if (cmd === '/say') {
+                showGlobal("📢 " + args.slice(1).join(' '));
+            }
+            // Бонус
+            else if (cmd === '/bonus') {
+                let w = Math.floor(Math.random() * 5000) + 500;
+                score += w; showGlobal("🎁 Бонус: +" + w);
+            }
+            // Онлайн
+            else if (cmd === '/see') {
+                alert("📊 Сейчас онлайн: " + (Math.floor(Math.random() * 40) + 10) + " чел.");
+            }
+            // Топ
+            else if (cmd === '/top') {
+                let p = [{n: "Ты", s: score}];
+                for (let i = 1; i <= 99; i++) p.push({n: "Player_"+(100+i), s: Math.floor(Math.random() * 10000000)});
+                p.sort((a, b) => b.s - a.s);
+                alert("🏆 ТОП-50:\n\n" + p.slice(0, 50).map((i, idx) => `${idx+1}. ${i.n}: ${i.s.toLocaleString()}`).join('\n'));
+            }
+            // Сброс
+            else if (cmd === '/clear' && args[1] === 'me') {
+                if(confirm("Обнулить баланс?")) { score = 0; showGlobal("🗑 Сброшено"); }
+            }
+
+            if(input && !btnCommand) input.value = "";
+            if(document.getElementById('hints')) document.getElementById('hints').style.display = 'none';
             refresh();
-            setTimeout(() => {
-                document.getElementById('safe-game').style.display = 'none';
-                title.style.color = "white"; title.innerText = "ВЗЛОМ...";
-                startCD(currentH, c.cd);
-            }, 1200);
         }
 
-        function startCD(i, s) {
-            const el = document.getElementById('cd-'+i); el.style.display = 'flex';
-            let t = s; el.innerText = t;
-            let it = setInterval(() => { t--; el.innerText = t; if(t<=0){ clearInterval(it); el.style.display='none'; }}, 1000);
+        // Функции ядра
+        function refresh() {
+            let el = document.getElementById('val');
+            if(el) el.innerText = score.toLocaleString();
+            localStorage.setItem('cl_score', score);
         }
 
-        function buy(p, btn) {
-            if(score >= p && !hasMask) {
-                score -= p; hasMask = true;
-                btn.innerText = "КУПЛЕНО"; btn.style.background = "#333";
-                refresh();
+        function showGlobal(t) {
+            let e = document.getElementById('global-msg');
+            if(!e){
+                e = document.createElement('div'); e.id = 'global-msg';
+                e.style = "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:gold;color:black;padding:12px 25px;border-radius:30px;font-weight:bold;z-index:2000;box-shadow:0 0 15px gold;";
+                document.body.appendChild(e);
             }
+            e.innerText = t; e.style.display='block';
+            setTimeout(()=> e.style.display='none', 4000);
         }
 
-        function applyCode() {
-            let v = document.getElementById('find').value.toLowerCase();
-            if(v === 'clover777') score += 1000000;
-            if(v.includes('give')) score += 50000;
-            document.getElementById('find').value = ""; refresh();
-            alert("Код принят!");
+        function tab(id, el) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+            document.getElementById(id).classList.add('on');
+            document.querySelectorAll('.nav-item').forEach(n => n.style.color = '#888');
+            el.style.color = 'gold';
         }
 
-        function setL(n) {
-            document.getElementById('cur-lang').innerText = n;
-            document.getElementById('lang-list').classList.remove('show');
-        }
-
-        function spawn() {
-            if(!document.getElementById('game-view').classList.contains('active')) return;
-            const c = document.createElement('div');
-            c.className = 'clover'; c.innerHTML = '🍀';
-            c.style.left = Math.random() * (window.innerWidth - 40) + 'px';
-            c.style.top = '-50px';
-            document.getElementById('game-view').appendChild(c);
-            let y = -50;
-                let f = setInterval(() => {
-        y += 2.5; c.style.top = y + 'px';
-        if(y > window.innerHeight){ clearInterval(f); c.remove(); }
-    }, 16);
-    c.onclick = () => { score += 10; refresh(); c.remove(); };
-}
-
-function refresh() {
-    let el = document.getElementById('val');
-    if (el) el.innerText = score.toLocaleString();
-    localStorage.setItem('cl_score', score);
-}
-
-function showGlobal(text) {
-    let el = document.getElementById('global-msg');
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'global-msg';
-        el.style = "display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);background:gold;color:black;padding:15px 30px;border-radius:50px;font-weight:bold;z-index:1000;box-shadow:0 0 20px gold;text-align:center;";
-        document.body.appendChild(el);
-    }
-    el.innerText = text;
-    el.style.display = 'block';
-    setTimeout(() => { el.style.display = 'none'; }, 5000);
-}
-
-function applyCode(btnCommand) {
-    let input = document.getElementById('find');
-    let v = btnCommand || (input ? input.value.trim() : ""); 
-    
-    if (!v.startsWith('/')) { 
-        if(!btnCommand) alert("Используй /команда"); 
-        return; 
-    }
-    
-    let args = v.split(' ');
-    let cmd = args[0].toLowerCase();
-
-    if (cmd === '/6633') {
-        score += 5000000;
-        showGlobal("👑 АДМИН-РЕЖИМ ВКЛЮЧЕН");
-    } 
-    else if (cmd === '/top') {
-        let players = [{n: "Mimi (Ты)", s: score}];
-        const names = ["Killer", "Lucky", "Richie", "Shadow", "Ghost", "King", "BrawlBot"];
-        for (let i = 1; i <= 99; i++) {
-            players.push({
-                n: names[Math.floor(Math.random() * names.length)] + "_" + (100 + i),
-                s: Math.floor(Math.random() * 50000000) + 10000
-            });
-        }
-        players.sort((a, b) => b.s - a.s);
-        let text = "🏆 ТОП-100 МАГНАТОВ:\n\n";
-        players.slice(0, 100).forEach((p, i) => {
-            text += `${i + 1}. ${p.n}: ${p.s.toLocaleString()} 🍀\n`;
-        });
-        alert(text);
-    }
-    else if (cmd === '/money') {
-        score += parseInt(args[1]) || 0;
-        showGlobal("💰 Баланс обновлен");
-    }
-
-    if(input && !btnCommand) input.value = ""; 
-    refresh();
-}
-
-// Запуск основного цикла игры
-setInterval(spawn, 1000);
-refresh();
-</script>
+        setInterval(spawn, 1000);
+        refresh();
+    </script>
 </body>
 </html>
