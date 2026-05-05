@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Tycoon Ultimate</title>
+    <title>Clover Tycoon</title>
     <style>
         :root { --gold: #ffd700; --green: #00ff88; --bg: #0a0a0a; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: manipulation; }
@@ -12,21 +12,26 @@
         .screen.on { display: block; }
 
         #game-view.on { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #val { font-size: 50px; color: var(--gold); font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.4); z-index: 10; }
+        #val { font-size: 50px; color: var(--gold); font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.4); z-index: 10; position: relative; }
         
-        /* АНИМАЦИЯ ПАДЕНИЯ КЛЕВЕРА */
+        /* КЛЕВЕРЫ: МЕДЛЕННЫЙ ЛИСТОПАД */
         .clover { 
             position: absolute; 
-            font-size: 40px; 
+            font-size: 45px; 
             cursor: pointer; 
             z-index: 5; 
             user-select: none;
-            animation: fall 3s linear forwards; /* Клевер падает 3 секунды */
+            top: -60px;
+            /* Настройка анимации на 7 секунд по умолчанию */
+            animation: fall 7s linear forwards; 
+            transition: transform 0.1s;
         }
 
+        .clover:active { transform: scale(1.4); }
+
         @keyframes fall {
-            0% { transform: translateY(-100px) rotate(0deg); }
-            100% { transform: translateY(110vh) rotate(360deg); }
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(110vh) rotate(720deg); } /* Больше вращения для красоты */
         }
 
         .card { background: #161616; border: 1px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
@@ -37,31 +42,28 @@
         .nav-item { flex: 1; text-align:center; padding: 18px 5px; cursor: pointer; color: #666; font-size: 11px; font-weight: bold; }
         .nav-item.active { color: var(--gold); background: #1a1a1a; }
 
-        /* ИСПРАВЛЕННОЕ УВЕДОМЛЕНИЕ */
+        /* УВЕДОМЛЕНИЕ */
         #global-msg {
             display: none;
             position: fixed;
-            top: 20px; /* Сместил выше, чтобы не закрывало заголовок */
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--gold);
             color: black;
-            padding: 10px 20px;
+            padding: 10px 25px;
             border-radius: 50px;
             font-weight: bold;
             z-index: 2000;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            min-width: 200px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
         }
 
         .admin-icon {
-            width: 35px;
-            height: 35px;
+            width: 32px;
+            height: 32px;
             vertical-align: middle;
             margin-right: 10px;
             border-radius: 50%;
-            object-fit: cover;
-            background: #fff; /* Белый фон, если картинка грузится */
         }
     </style>
 </head>
@@ -81,19 +83,18 @@
     <div id="scr-shop" class="screen">
         <h2 style="color:var(--green); text-align:center;">🛠 МАГАЗИН</h2>
         <div class="card">
-            <b>🎭 Маска Анонима</b> <br><small>Скрывает твой баланс в ТОПе</small>
-            <button class="btn" style="margin-top:15px;" onclick="showGlobal('Функция в разработке!')">50,000 🍀</button>
+            <b>🎭 Маска</b> <br><small>Скрывает твой прогресс</small>
+            <button class="btn" style="margin-top:15px;" onclick="showGlobal('Куплено!')">50,000 🍀</button>
         </div>
     </div>
 
     <div id="scr-set" class="screen">
         <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
         <div class="card">
-            <p style="margin-top:0; font-weight: bold;">Админ-команды:</p>
             <input type="text" id="find" class="input-box" placeholder="Введи /команду...">
             <button class="btn" onclick="applyCode()">выполнить</button>
         </div>
-        <button class="btn" style="background: #cc0000; color: white;" onclick="applyCode('/reset')">ПОЛНЫЙ СБРОС ИГРЫ</button>
+        <button class="btn" style="background: #cc0000; color: white;" onclick="resetGame()">СБРОСИТЬ ВСЁ</button>
     </div>
 
     <div id="nav">
@@ -105,7 +106,7 @@
     <script>
         let score = parseInt(localStorage.getItem('cl_score')) || 0;
 
-        // ИСПОЛЬЗУЕМ ПРЯМУЮ ССЫЛКУ НА КАРТИНКУ
+        // Картинка админа
         const adminImgHtml = `<img src="https://i.ibb.co/Xf8Y8mK/image-94.png" class="admin-icon" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1995/1995531.png'">`;
 
         function tab(id, el) {
@@ -115,7 +116,7 @@
             el.classList.add('active');
         }
 
-        // ПАДАЮЩИЕ КЛЕВЕРЫ
+        // Спавн с падением 7 секунд
         function spawn() {
             if (!document.getElementById('game-view').classList.contains('on')) return;
             const c = document.createElement('div');
@@ -123,15 +124,19 @@
             c.innerText = '🍀';
             c.style.left = Math.random() * (window.innerWidth - 60) + 'px';
             
+            // Устанавливаем ровно 7 секунд падения
+            const time = 7; 
+            c.style.animationDuration = time + 's';
+            
             c.onclick = function() {
                 score += 100;
                 refresh();
-                this.remove();
+                this.style.display = 'none'; // Мгновенно скрываем при клике
             };
             document.getElementById('game-view').appendChild(c);
             
-            // Удаляем клевер, когда он упал за экран
-            setTimeout(() => { if(c.parentNode) c.remove(); }, 3000);
+            // Удаляем из памяти после завершения анимации
+            setTimeout(() => { if(c.parentNode) c.remove(); }, time * 1000);
         }
 
         function showGlobal(text) {
@@ -139,36 +144,28 @@
             const content = document.getElementById('msg-content');
             content.innerHTML = adminImgHtml + `<span>${text}</span>`;
             el.style.display = 'block';
-            setTimeout(() => { el.style.display = 'none'; }, 4000);
+            setTimeout(() => { el.style.display = 'none'; }, 3000);
         }
 
-        function applyCode(forcedCmd = null) {
+        function resetGame() {
+            if(confirm("Точно сбросить?")) { localStorage.clear(); location.reload(); }
+        }
+
+        function applyCode() {
             let input = document.getElementById('find');
-            let v = forcedCmd || input.value.trim();
+            let v = input.value.trim();
             if (!v.startsWith('/')) return;
-            
             let args = v.split(' ');
             let cmd = args[0].toLowerCase();
 
-            if (cmd === '/6633') {
-                score += 5000000;
-                showGlobal("👑 АДМИН-ДОСТУП: +5M");
-            } 
+            if (cmd === '/6633') { score += 5000000; showGlobal("👑 АДМИН: +5M"); } 
             else if (cmd === '/money') {
                 let amt = parseInt(args[1]) || 10000;
                 score += amt;
                 showGlobal("💰 Выдано: " + amt.toLocaleString());
             }
-            else if (cmd === '/global') {
-                showGlobal(args.slice(1).join(' ') || "Hi!");
-            }
-            else if (cmd === '/reset') {
-                if(confirm("Удалить весь прогресс?")) {
-                    localStorage.clear();
-                    location.reload();
-                }
-            }
-
+            else if (cmd === '/global') { showGlobal(args.slice(1).join(' ') || "Привет!"); }
+            
             input.value = ""; 
             refresh();
         }
@@ -178,7 +175,8 @@
             localStorage.setItem('cl_score', score);
         }
 
-        setInterval(spawn, 800); // Клеверы падают чаще
+        // Спавним чуть чаще (каждые 0.5 сек), так как они летят долго
+        setInterval(spawn, 500);
         refresh();
     </script>
 </body>
