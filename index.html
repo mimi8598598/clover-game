@@ -8,123 +8,83 @@
         :root { --gold: #ffd700; --green: #00ff88; --bg: #0a0a0a; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: manipulation; }
         
-        /* Экраны */
         .screen { display: none; height: 100vh; width: 100vw; padding: 20px; box-sizing: border-box; overflow-y: auto; padding-bottom: 100px; }
         .screen.on { display: block; }
 
-        /* Игра */
         #game-view.on { display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
         #val { font-size: 50px; color: var(--gold); font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.4); }
-        .clover { position: absolute; font-size: 45px; cursor: pointer; z-index: 5; user-select: none; transition: transform 0.1s; filter: drop-shadow(0 0 5px rgba(0,255,0,0.5)); }
+        
+        .clover { position: absolute; font-size: 45px; cursor: pointer; z-index: 5; user-select: none; transition: transform 0.1s; }
         .clover:active { transform: scale(1.3); }
 
-        /* Карточки и Инпуты */
         .card { background: #161616; border: 1px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
         .input-box { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #444; background: #000; color: white; margin-bottom: 10px; box-sizing: border-box; outline: none; font-size: 16px; }
-        .input-box:focus { border-color: var(--gold); }
-        .btn { background: var(--gold); color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; font-size: 14px; text-transform: uppercase; }
-        .btn:active { opacity: 0.8; }
+        .btn { background: var(--gold); color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; }
         
-        /* Навигация */
         #nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #111; border-top: 1px solid #333; z-index: 100; }
         .nav-item { flex: 1; text-align:center; padding: 18px 5px; cursor: pointer; color: #666; font-size: 11px; font-weight: bold; }
         .nav-item.active { color: var(--gold); background: #1a1a1a; }
 
-        /* Языки */
+        /* Твоя иконка из картинки */
+        .admin-icon {
+            width: 30px;
+            height: 30px;
+            vertical-align: middle;
+            margin-right: 10px;
+            border-radius: 50%;
+            border: 2px solid black;
+        }
+
         .lang-list { display: none; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
         .lang-list.show { display: grid; }
-        .lang-item { background: #222; padding: 10px; border-radius: 8px; text-align: center; font-size: 11px; cursor: pointer; border: 1px solid #333; }
+        .lang-item { background: #222; padding: 10px; border-radius: 8px; text-align: center; font-size: 11px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <!-- Всплывающие уведомления -->
-    <div id="global-msg" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:var(--gold); color:black; padding:12px 25px; border-radius:30px; font-weight:bold; z-index:2000; display:none; box-shadow: 0 5px 20px rgba(0,0,0,0.5);"></div>
+    <!-- Всплывающее окно уведомлений -->
+    <div id="global-msg" style="display:none; position:fixed; top:80px; left:50%; transform:translateX(-50%); background:gold; color:black; padding:15px 30px; border-radius:50px; font-weight:bold; z-index:2000; box-shadow:0 0 20px gold; text-align:center; min-width: 260px;">
+        <div id="msg-content" style="display: flex; align-items: center; justify-content: center;"></div>
+    </div>
 
-    <!-- ЭКРАН ИГРЫ -->
+    <!-- ЭКРАНЫ -->
     <div id="game-view" class="screen on">
         <div style="text-align:center;">
             <div id="val">0</div>
-            <p style="color:#888; margin-top: 5px; letter-spacing: 2px;">CLOVERS</p>
+            <p style="color:#888; margin-top: 5px;">CLOVERS</p>
         </div>
     </div>
 
-    <!-- ЭКРАН МАГАЗИНА -->
     <div id="scr-shop" class="screen">
         <h2 style="color:var(--green); text-align:center;">🛠 МАГАЗИН</h2>
         <div class="card">
-            <b style="font-size:18px;">🎭 Маска Анонима</b> <br>
-            <small style="color:#888;">Снижает штраф при поимке полицией на 30%</small>
-            <button class="btn" style="margin-top:15px;" onclick="msg('Предмет куплен!')">50,000 🍀</button>
-        </div>
-        <div class="card">
-            <b style="font-size:18px;">🛡 Тяжелая Броня</b> <br>
-            <small style="color:#888;">Полная защита от одного проигрыша</small>
-            <button class="btn" style="margin-top:15px; background: #333; color: #888;">250,000 🍀</button>
+            <b>🎭 Маска</b> <br><small>Защита от проверок</small>
+            <button class="btn" style="margin-top:15px;" onclick="showGlobal('Предмет куплен!')">50,000 🍀</button>
         </div>
     </div>
 
-    <!-- ЭКРАН НАСТРОЕК -->
     <div id="scr-set" class="screen">
         <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
-        
         <div class="card">
-            <p style="margin-top:0; font-weight: bold;">Админ-панель:</p>
-            <input type="text" id="find" class="input-box" placeholder="Введите команду...">
+            <p style="margin-top:0; font-weight: bold;">Админ-команды:</p>
+            <input type="text" id="find" class="input-box" placeholder="Введи /команду...">
             <button class="btn" onclick="applyCode()">ВЫПОЛНИТЬ</button>
-        </div>
-
-        <div class="card">
-            <p style="margin-top:0; font-weight: bold;">ВЫБЕРИ ЯЗЫК (30):</p>
-            <button class="btn" style="background:#333; color:white;" onclick="document.getElementById('lang-list').classList.toggle('show')">Сменить язык</button>
-            
-            <div id="lang-list" class="lang-list">
-                <div class="lang-item" onclick="msg('Установлен: Русский')">РУССКИЙ</div>
-                <div class="lang-item" onclick="msg('Set: English')">ENGLISH</div>
-                <div class="lang-item" onclick="msg('Set: Deutsch')">DEUTSCH</div>
-                <div class="lang-item" onclick="msg('Set: Français')">FRANÇAIS</div>
-                <div class="lang-item" onclick="msg('Set: Italiano')">ITALIANO</div>
-                <div class="lang-item" onclick="msg('Set: Español')">ESPAÑOL</div>
-                <div class="lang-item" onclick="msg('Set: Português')">PORTUGUÊS</div>
-                <div class="lang-item" onclick="msg('Set: Türkçe')">TÜRKÇE</div>
-                <div class="lang-item" onclick="msg('Set: Polski')">POLSKI</div>
-                <div class="lang-item" onclick="msg('Set: Nederlands')">NEDERLANDS</div>
-                <div class="lang-item" onclick="msg('Установлено: Українська')">УКРАЇНСЬКА</div>
-                <div class="lang-item" onclick="msg('Set: 日本語')">日本語</div>
-                <div class="lang-item" onclick="msg('Set: 한국어')">한국어</div>
-                <div class="lang-item" onclick="msg('Set: 中文')">中文</div>
-                <div class="lang-item" onclick="msg('Set: العربية')">العربية</div>
-                <div class="lang-item" onclick="msg('Set: हिन्दी')">हिन्दी</div>
-                <div class="lang-item" onclick="msg('Set: Svenska')">SVENSKA</div>
-                <div class="lang-item" onclick="msg('Set: Norsk')">NORSK</div>
-                <div class="lang-item" onclick="msg('Set: Dansk')">DANSK</div>
-                <div class="lang-item" onclick="msg('Set: Suomi')">SUOMI</div>
-                <div class="lang-item" onclick="msg('Set: Čeština')">ČEŠTINA</div>
-                <div class="lang-item" onclick="msg('Set: Magyar')">MAGYAR</div>
-                <div class="lang-item" onclick="msg('Set: Română')">ROMÂNĂ</div>
-                <div class="lang-item" onclick="msg('Set: Ελληνικά')">ΕΛΛΗНИКА</div>
-                <div class="lang-item" onclick="msg('Set: Bahasa ID')">BAHASA ID</div>
-                <div class="lang-item" onclick="msg('Set: Tiếng Việt')">TIẾNG VIỆT</div>
-                <div class="lang-item" onclick="msg('Set: ไทย')">ไทย</div>
-                <div class="lang-item" onclick="msg('Set: עברית')">עברית</div>
-                <div class="lang-item" onclick="msg('Set: БЪЛГАРСКИ')">БЪЛГАРСКИ</div>
-                <div class="lang-item" onclick="msg('Set: СРПСКИ')">СРПСКИ</div>
-            </div>
         </div>
     </div>
 
-    <!-- НИЖНЕЕ МЕНЮ -->
+    <!-- МЕНЮ -->
     <div id="nav">
         <div class="nav-item active" onclick="tab('game-view', this)">🎮 ИГРА</div>
         <div class="nav-item" onclick="tab('scr-shop', this)">🛠 ШОП</div>
         <div class="nav-item" onclick="tab('scr-set', this)">⚙️ НАСТР.</div>
-        <div class="nav-item" onclick="showTop()">🏆 ТОП</div>
     </div>
 
     <script>
         let score = parseInt(localStorage.getItem('cl_score')) || 0;
 
-        // Переключение вкладок
+        // Переменная с твоей картинкой
+        const adminImgHtml = `<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8XhN4E0iEof3p67_rWb7q3948VjS62mH-vQ&s" class="admin-icon">`;
+
         function tab(id, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
             document.getElementById(id).classList.add('on');
@@ -132,13 +92,12 @@
             el.classList.add('active');
         }
 
-        // Появление клеверов
         function spawn() {
             if (!document.getElementById('game-view').classList.contains('on')) return;
             const c = document.createElement('div');
             c.className = 'clover';
             c.innerText = '🍀';
-            c.style.left = Math.random() * (window.innerWidth - 70) + 35 + 'px';
+            c.style.left = Math.random() * (window.innerWidth - 60) + 30 + 'px';
             c.style.top = Math.random() * (window.innerHeight - 200) + 70 + 'px';
             c.onclick = function() {
                 score += 100;
@@ -149,77 +108,52 @@
             setTimeout(() => { if(c) c.remove(); }, 2000);
         }
 
-        // Обработка команд
-        function applyCode() {
-            const input = document.getElementById('find');
-            const v = input.value.trim();
-            const a = v.split(' ');
-            const cmd = a[0].toLowerCase();
+        // Функция показа уведомления с картинкой
+        function showGlobal(text) {
+            let el = document.getElementById('global-msg');
+            let content = document.getElementById('msg-content');
+            content.innerHTML = adminImgHtml + `<span>${text}</span>`;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
 
-            // Команда перезапуска
-            if (cmd === '/reset') {
-                if (confirm("Вы уверены? Весь прогресс будет удален навсегда!")) {
+        function applyCode() {
+            let input = document.getElementById('find');
+            let v = input.value.trim();
+            if (!v.startsWith('/')) { alert("Используй /команда"); return; }
+            
+            let args = v.split(' ');
+            let cmd = args[0].toLowerCase();
+
+            if (cmd === '/6633') {
+                score += 5000000;
+                showGlobal("👑 АДМИН-РЕЖИМ ВКЛЮЧЕН");
+            } 
+            else if (cmd === '/money') {
+                let amt = parseInt(args[1]) || 0;
+                score += amt;
+                showGlobal("💰 Добавлено: " + amt.toLocaleString());
+            }
+            else if (cmd === '/global') {
+                showGlobal(args.slice(1).join(' ') || "Привет!");
+            }
+            else if (cmd === '/reset') {
+                if(confirm("Сбросить весь прогресс?")) {
                     localStorage.clear();
                     location.reload();
                 }
             }
-            // Выдача денег
-            else if (cmd === '/give' && a[1] === 'money' && a[2] === 'me') {
-                let amt = parseInt(a[3]) || 0;
-                score += amt;
-                msg(`💰 Зачислено: ${amt.toLocaleString()}`);
+            else if (cmd === '/top') {
+                alert("🏆 ТОП-3:\n1. Mimi: " + score + "\n2. Boss: 25,000,000\n3. Noob: 500,000");
             }
-            // Настраиваемая раздача
-            else if (cmd === '/random' && a[1] === 'give') {
-                let count = a[2] || 0;
-                let sum = a[3] || 0;
-                msg(`🎲 Раздача! ${count} игроков получили по ${sum} 🍀`);
-            }
-            // Быстрый бонус
-            else if (cmd === '/bonus') {
-                score += 5000;
-                msg("🎁 Бонус +5,000 🍀");
-            }
-            // Очистка только баланса
-            else if (cmd === '/clear' && a[1] === 'me') {
-                score = 0;
-                msg("🗑 Баланс обнулен");
-            }
-            // Глобальное сообщение
-            else if (cmd === '/say') {
-                msg("📢 " + a.slice(1).join(' '));
-            }
-            else {
-                msg("❌ Неизвестная команда");
-            }
-            
-            input.value = "";
+
+            input.value = ""; 
             refresh();
         }
 
-        // Таблица лидеров
-        function showTop() {
-            let p = [{n: "Ты (Mimi)", s: score}];
-            for(let i=1; i<100; i++) {
-                p.push({n: "Player_"+(100+i), s: Math.floor(Math.random()*25000000)});
-            }
-            p.sort((a,b) => b.s - a.s);
-            let topStr = "🏆 ТОП-50 МАГНАТОВ:\n\n" + p.slice(0, 50).map((p, i) => `${i+1}. ${p.n}: ${p.s.toLocaleString()} 🍀`).join('\n');
-            alert(topStr);
-        }
-
-        // Обновление интерфейса
         function refresh() {
             document.getElementById('val').innerText = score.toLocaleString();
             localStorage.setItem('cl_score', score);
-        }
-
-        // Всплывающие сообщения
-        function msg(t) {
-            const m = document.getElementById('global-msg');
-            m.innerText = t;
-            m.style.display = 'block';
-            setTimeout(() => m.style.display = 'none', 3000);
         }
 
         setInterval(spawn, 1000);
