@@ -3,90 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Tycoon Admin</title>
+    <title>Clover Game Fix</title>
     <style>
-        :root { --gold: #ffd700; --bg: #0a0a0a; --panel: #161616; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: manipulation; }
+        body { margin: 0; background: #0a0a0a; color: white; font-family: sans-serif; overflow: hidden; }
         
-        /* Экраны */
-        .screen { display: none; height: 100vh; width: 100vw; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        /* Видимость экранов */
+        .screen { display: none; height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; padding: 20px; box-sizing: border-box; }
         .screen.on { display: block; }
 
         /* Игра */
-        #game-view { text-align: center; display: none; }
-        #game-view.on { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #val { font-size: 40px; color: var(--gold); font-weight: bold; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        .clover { position: absolute; font-size: 40px; cursor: pointer; z-index: 5; transition: transform 0.1s; }
+        #game-view { background: radial-gradient(circle, #1a1a1a, #000); text-align: center; }
+        #val { font-size: 50px; color: gold; margin-top: 20px; font-weight: bold; }
+        .clover { position: absolute; font-size: 40px; cursor: pointer; user-select: none; z-index: 10; }
 
-        /* Карточки и кнопки */
-        .card { background: var(--panel); border: 1px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
-        .btn { background: var(--gold); color: black; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; }
-        
+        /* Интерфейс */
+        .card { background: #161616; border: 1px solid #333; padding: 20px; border-radius: 15px; margin-top: 20px; }
+        input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid gold; background: #000; color: white; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { background: gold; color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; }
+
         /* Навигация */
-        #nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #111; border-top: 1px solid #333; z-index: 100; }
-        .nav-item { flex: 1; text-align: center; padding: 15px; cursor: pointer; color: #888; font-weight: bold; }
-        .nav-item.active { color: var(--gold); }
+        #nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #111; border-top: 2px solid #333; z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; padding: 20px; cursor: pointer; color: #666; font-weight: bold; }
+        .nav-item.active { color: gold; background: #1a1a1a; }
 
         /* Подсказки */
-        #hints { position: absolute; bottom: 105%; left: 0; width: 100%; background: rgba(0,0,0,0.95); border: 1px solid var(--gold); border-radius: 10px; display: none; z-index: 1000; max-height: 200px; overflow-y: auto; }
-        #hints div { padding: 12px; border-bottom: 1px solid #333; cursor: pointer; }
+        #hints { background: rgba(0,0,0,0.9); border: 1px solid gold; border-radius: 10px; display: none; margin-bottom: 10px; max-height: 150px; overflow-y: auto; }
+        #hints div { padding: 10px; border-bottom: 1px solid #222; cursor: pointer; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <!-- Уведомления -->
-    <div id="global-msg" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--gold);color:black;padding:12px 25px;border-radius:30px;font-weight:bold;z-index:2000;display:none;box-shadow:0 0 15px var(--gold);"></div>
+    <div id="global-msg" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); background:gold; color:black; padding:10px 20px; border-radius:20px; font-weight:bold; z-index:2000; display:none;"></div>
 
     <!-- ЭКРАН ИГРЫ -->
     <div id="game-view" class="screen on">
-        <div style="margin-top: -50px;">
-            <p>Твой баланс:</p>
-            <div id="val">0</div>
-            <p>Нажимай на клеверы!</p>
-        </div>
+        <div id="val">0</div>
+        <p>Собирай клеверы!</p>
     </div>
 
     <!-- ЭКРАН МАГАЗИНА -->
     <div id="scr-shop" class="screen">
-        <h2 style="color:var(--gold); text-align:center;">🛠 МАГАЗИН</h2>
+        <h2>🛠 Магазин</h2>
         <div class="card">
-            <b>Маска</b><br><small>Снижает штрафы при ограблении</small>
-            <button class="btn" style="margin-top:10px;" onclick="alert('Куплено!')">50,000 🍀</button>
+            <p>Улучшение клика</p>
+            <button class="btn" onclick="alert('Скоро!')">1,000 🍀</button>
         </div>
     </div>
 
     <!-- ЭКРАН НАСТРОЕК -->
     <div id="scr-set" class="screen">
         <div class="card">
-            <h3 style="color: var(--gold); margin-top: 0;">⚙️ Админ-панель</h3>
-            <div style="position:relative; margin-bottom: 15px;">
-                <input type="text" id="find" oninput="showHints(this.value)" placeholder="Введите / для команд..." 
-                       style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--gold); background: #111; color: white; outline: none; box-sizing: border-box;">
-                <div id="hints"></div>
-            </div>
-            <button class="btn" onclick="applyCode()">Выполнить</button>
+            <h3 style="color:gold">⚙️ Админ-панель</h3>
+            <div id="hints"></div>
+            <input type="text" id="find" oninput="showHints(this.value)" placeholder="Введите / для команд...">
+            <button class="btn" onclick="applyCode()">ВЫПОЛНИТЬ</button>
         </div>
     </div>
 
     <!-- МЕНЮ -->
     <div id="nav">
-        <div class="nav-item active" onclick="tab('game-view', this)">🎮 Игра</div>
-        <div class="nav-item" onclick="tab('scr-shop', this)">🛠 Шоп</div>
-        <div class="nav-item" onclick="tab('scr-set', this)">⚙️ Настр.</div>
+        <div class="nav-item active" onclick="tab('game-view', this)">🎮 ИГРА</div>
+        <div class="nav-item" onclick="tab('scr-shop', this)">🛠 ШОП</div>
+        <div class="nav-item" onclick="tab('scr-set', this)">⚙️ НАСТР.</div>
     </div>
 
     <script>
         let score = parseInt(localStorage.getItem('cl_score')) || 0;
+        const gameView = document.getElementById('game-view');
+        const valDisplay = document.getElementById('val');
 
-        // Команды
-        const commandList = [
-            { cmd: '/random give ', desc: 'Раздать (кол-во сумма)' },
-            { cmd: '/give money me ', desc: 'Выдать себе клеверы' },
-            { cmd: '/bonus', desc: 'Получить подарок 🎁' },
-            { cmd: '/say ', desc: 'Глобальный чат 📢' },
-            { cmd: '/clear me', desc: 'Обнулить свой баланс' }
+        // Список команд
+        const commands = [
+            { c: '/give money me ', d: 'Дать себе денег' },
+            { c: '/random give ', d: 'Раздача (кол-во сумма)' },
+            { c: '/bonus', d: 'Бонус 5000' },
+            { c: '/clear me', d: 'Обнулить счет' }
         ];
 
+        // Переключение вкладок
         function tab(id, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
             document.getElementById(id).classList.add('on');
@@ -94,73 +88,72 @@
             el.classList.add('active');
         }
 
+        // Спавн клеверов (только если открыта игра)
         function spawn() {
-            if (!document.getElementById('game-view').classList.contains('on')) return;
+            if (!gameView.classList.contains('on')) return;
             const c = document.createElement('div');
             c.className = 'clover';
             c.innerText = '🍀';
-            c.style.left = Math.random() * (window.innerWidth - 50) + 'px';
-            c.style.top = Math.random() * (window.innerHeight - 150) + 'px';
-            c.onclick = function() {
+            c.style.left = Math.random() * (window.innerWidth - 60) + 30 + 'px';
+            c.style.top = Math.random() * (window.innerHeight - 150) + 50 + 'px';
+            
+            c.onclick = () => {
                 score += 100;
-                refresh();
-                this.remove();
+                updateUI();
+                c.remove();
             };
-            document.getElementById('game-view').appendChild(c);
-            setTimeout(() => c.remove(), 3000);
+            gameView.appendChild(c);
+            setTimeout(() => { if(c) c.remove(); }, 2000);
         }
 
-        function showHints(val) {
-            let hBox = document.getElementById('hints');
-            if (val.startsWith('/')) {
-                hBox.innerHTML = '';
-                hBox.style.display = 'block';
-                commandList.forEach(item => {
-                    let div = document.createElement('div');
-                    div.innerHTML = `<span style="color:gold;">${item.cmd}</span><br><small style="color:#aaa;">${item.desc}</small>`;
-                    div.onclick = () => {
-                        document.getElementById('find').value = item.cmd;
-                        hBox.style.display = 'none';
-                    };
-                    hBox.appendChild(div);
-                });
-            } else { hBox.style.display = 'none'; }
+        // Подсказки
+        function showHints(v) {
+            const h = document.getElementById('hints');
+            if (v.startsWith('/')) {
+                h.style.display = 'block';
+                h.innerHTML = commands.map(i => `<div onclick="setCmd('${i.c}')"><b>${i.c}</b><br>${i.d}</div>`).join('');
+            } else { h.style.display = 'none'; }
         }
 
+        function setCmd(c) {
+            document.getElementById('find').value = c;
+            document.getElementById('hints').style.display = 'none';
+        }
+
+        // Выполнение команд
         function applyCode() {
-            let v = document.getElementById('find').value.trim();
-            let args = v.split(' ');
-            let cmd = args[0].toLowerCase();
+            const input = document.getElementById('find');
+            const v = input.value;
+            const a = v.split(' ');
 
-            if (cmd === '/give' && args[2] === 'me') {
-                score += parseInt(args[3]) || 0;
-                showGlobal("💰 Баланс пополнен!");
-            } else if (cmd === '/random' && args[1] === 'give') {
-                showGlobal(`🎲 Раздача! ${args[2]} игроков получили по ${args[3]} 🍀`);
-            } else if (cmd === '/bonus') {
-                score += 5000; showGlobal("🎁 Бонус +5000!");
-            } else if (cmd === '/say') {
-                showGlobal("📢 " + args.slice(1).join(' '));
-            } else if (cmd === '/clear' && args[1] === 'me') {
-                score = 0; showGlobal("🗑 Сброшено");
+            if (v.includes('/give money me')) {
+                score += parseInt(a[3]) || 0;
+                msg("💰 Деньги зачислены!");
+            } else if (v.includes('/random give')) {
+                msg(`🎲 Раздача на ${a[2]} чел. по ${a[3]} 🍀`);
+            } else if (v.includes('/bonus')) {
+                score += 5000; msg("🎁 Бонус +5000!");
+            } else if (v.includes('/clear me')) {
+                score = 0; msg("🗑 Очищено");
             }
-            document.getElementById('find').value = "";
-            refresh();
+            
+            input.value = '';
+            updateUI();
         }
 
-        function refresh() {
-            document.getElementById('val').innerText = score.toLocaleString();
+        function updateUI() {
+            valDisplay.innerText = score.toLocaleString();
             localStorage.setItem('cl_score', score);
         }
 
-        function showGlobal(t) {
-            let e = document.getElementById('global-msg');
-            e.innerText = t; e.style.display = 'block';
-            setTimeout(() => e.style.display = 'none', 3000);
+        function msg(t) {
+            const m = document.getElementById('global-msg');
+            m.innerText = t; m.style.display = 'block';
+            setTimeout(() => m.style.display = 'none', 3000);
         }
 
         setInterval(spawn, 1000);
-        refresh();
+        updateUI();
     </script>
 </body>
 </html>
