@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Tycoon Slow</title>
+    <title>Clover Tycoon Updated</title>
     <style>
         :root { --gold: #ffd700; --green: #00ff88; --bg: #0a0a0a; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: manipulation; }
@@ -14,21 +14,24 @@
         #game-view.on { display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #val { font-size: 55px; color: var(--gold); font-weight: bold; text-shadow: 0 0 25px rgba(255,215,0,0.5); z-index: 10; position: relative; pointer-events: none; }
         
-        /* КЛЕВЕРЫ: МЕДЛЕННЫЙ ПОЛЕТ */
+        /* КЛЕВЕРЫ: ЧЕСТНЫЕ 7 СЕКУНД ПЛАВНОГО ПОЛЕТА */
         .clover { 
             position: absolute; 
             font-size: 45px; 
             cursor: pointer; 
             z-index: 5; 
             user-select: none;
-            top: -10vh; /* Появление чуть выше экрана */
-            will-change: transform; /* Оптимизация плавности */
-            animation: fall 7s linear forwards; 
+            top: -10vh;
+            animation-name: fall;
+            animation-duration: 7000ms;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+            will-change: transform;
         }
 
         @keyframes fall {
-            from { transform: translateY(0) rotate(0deg); }
-            to { transform: translateY(115vh) rotate(360deg); }
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(120vh) rotate(360deg); }
         }
 
         .card { background: #161616; border: 1px solid #333; padding: 20px; border-radius: 15px; margin-bottom: 15px; }
@@ -61,6 +64,7 @@
             vertical-align: middle;
             margin-right: 10px;
             border-radius: 50%;
+            background: #fff;
         }
     </style>
 </head>
@@ -70,11 +74,13 @@
         <div id="msg-content" style="display: flex; align-items: center; justify-content: center;"></div>
     </div>
 
+    <!-- ИГРА -->
     <div id="game-view" class="screen on">
         <div id="val">0</div>
         <p style="color:#888; margin-top: 5px; letter-spacing: 2px; pointer-events: none;">CLOVERS</p>
     </div>
 
+    <!-- ШОП -->
     <div id="scr-shop" class="screen">
         <h2 style="color:var(--green); text-align:center;">🛠 МАГАЗИН</h2>
         <div class="card">
@@ -83,15 +89,16 @@
         </div>
     </div>
 
+    <!-- НАСТРОЙКИ (БЕЗ КНОПКИ СБРОСА) -->
     <div id="scr-set" class="screen">
         <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
         <div class="card">
             <input type="text" id="find" class="input-box" placeholder="Введи /команду...">
             <button class="btn" onclick="applyCode()">выполнить</button>
         </div>
-        <button class="btn" style="background: #cc0000; color: white;" onclick="resetGame()">ОБНУЛИТЬ ВСЁ</button>
     </div>
 
+    <!-- НАВИГАЦИЯ -->
     <div id="nav">
         <div class="nav-item active" onclick="tab('game-view', this)">🎮 ИГРА</div>
         <div class="nav-item" onclick="tab('scr-shop', this)">🛠 ШОП</div>
@@ -100,7 +107,9 @@
 
     <script>
         let score = parseInt(localStorage.getItem('cl_score')) || 0;
-        const adminImgHtml = `<img src="https://i.ibb.co/Xf8Y8mK/image-94.png" class="admin-icon" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1995/1995531.png'">`;
+        
+        // Надежная иконка Роблокса, которая точно загрузится
+        const adminImgHtml = `<img src="https://images.rbxcdn.com/16f50b06b0d9af7f3403aeec9db21f8a.png" class="admin-icon">`;
 
         function tab(id, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
@@ -115,22 +124,18 @@
             c.className = 'clover';
             c.innerText = '🍀';
             
-            // Случайная позиция по горизонтали
             c.style.left = Math.random() * (window.innerWidth - 60) + 'px';
-            
-            // Ровно 7 секунд падения
-            c.style.animationDuration = '7s';
             
             c.onclick = function() {
                 score += 100;
                 refresh();
-                this.remove(); // Исчезает при клике
+                this.remove();
             };
             
             document.getElementById('game-view').appendChild(c);
             
-            // Удаляем объект после того как он точно покинул экран (8 сек для запаса)
-            setTimeout(() => { if(c.parentNode) c.remove(); }, 8000);
+            // Удаление ровно через 7 секунд
+            setTimeout(() => { if(c.parentNode) c.remove(); }, 7000);
         }
 
         function showGlobal(text) {
@@ -141,10 +146,6 @@
             setTimeout(() => { el.style.display = 'none'; }, 3000);
         }
 
-        function resetGame() {
-            if(confirm("Сбросить игру?")) { localStorage.clear(); location.reload(); }
-        }
-
         function applyCode() {
             let input = document.getElementById('find');
             let v = input.value.trim();
@@ -152,13 +153,21 @@
             let args = v.split(' ');
             let cmd = args[0].toLowerCase();
 
-            if (cmd === '/6633') { score += 5000000; showGlobal("👑 +5,000,000!"); } 
+            if (cmd === '/6633') { 
+                score += 5000000; 
+                showGlobal("👑 +5,000,000!"); 
+            } 
             else if (cmd === '/money') {
                 let amt = parseInt(args[1]) || 50000;
                 score += amt;
                 showGlobal("💰 Выдано: " + amt.toLocaleString());
             }
-            else if (cmd === '/global') { showGlobal(args.slice(1).join(' ') || "Привет!"); }
+            else if (cmd === '/global') { 
+                showGlobal(args.slice(1).join(' ') || "Привет!"); 
+            }
+            else if (cmd === '/reset') {
+                if(confirm("Сбросить игру?")) { localStorage.clear(); location.reload(); }
+            }
             
             input.value = ""; 
             refresh();
@@ -169,7 +178,6 @@
             localStorage.setItem('cl_score', score);
         }
 
-        // Спавн каждые 0.6 сек для плотности потока
         setInterval(spawn, 600);
         refresh();
     </script>
