@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Clover Tycoon Updated</title>
+    <title>Clover Tycoon Fixed</title>
     <style>
         :root { --gold: #ffd700; --green: #00ff88; --bg: #0a0a0a; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: manipulation; }
@@ -14,7 +14,7 @@
         #game-view.on { display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #val { font-size: 55px; color: var(--gold); font-weight: bold; text-shadow: 0 0 25px rgba(255,215,0,0.5); z-index: 10; position: relative; pointer-events: none; }
         
-        /* КЛЕВЕРЫ: ЧЕСТНЫЕ 7 СЕКУНД ПЛАВНОГО ПОЛЕТА */
+        /* КЛЕВЕРЫ: УСТАНОВЛЕНО НА 5 СЕКУНД */
         .clover { 
             position: absolute; 
             font-size: 45px; 
@@ -23,7 +23,7 @@
             user-select: none;
             top: -10vh;
             animation-name: fall;
-            animation-duration: 7000ms;
+            animation-duration: 5000ms;
             animation-timing-function: linear;
             animation-fill-mode: forwards;
             will-change: transform;
@@ -64,7 +64,9 @@
             vertical-align: middle;
             margin-right: 10px;
             border-radius: 50%;
-            background: #fff;
+            background: white;
+            padding: 2px;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -74,13 +76,11 @@
         <div id="msg-content" style="display: flex; align-items: center; justify-content: center;"></div>
     </div>
 
-    <!-- ИГРА -->
     <div id="game-view" class="screen on">
         <div id="val">0</div>
         <p style="color:#888; margin-top: 5px; letter-spacing: 2px; pointer-events: none;">CLOVERS</p>
     </div>
 
-    <!-- ШОП -->
     <div id="scr-shop" class="screen">
         <h2 style="color:var(--green); text-align:center;">🛠 МАГАЗИН</h2>
         <div class="card">
@@ -89,7 +89,6 @@
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ (БЕЗ КНОПКИ СБРОСА) -->
     <div id="scr-set" class="screen">
         <h2 style="text-align:center; color:var(--gold);">⚙️ НАСТРОЙКИ</h2>
         <div class="card">
@@ -98,7 +97,6 @@
         </div>
     </div>
 
-    <!-- НАВИГАЦИЯ -->
     <div id="nav">
         <div class="nav-item active" onclick="tab('game-view', this)">🎮 ИГРА</div>
         <div class="nav-item" onclick="tab('scr-shop', this)">🛠 ШОП</div>
@@ -108,8 +106,8 @@
     <script>
         let score = parseInt(localStorage.getItem('cl_score')) || 0;
         
-        // Надежная иконка Роблокса, которая точно загрузится
-        const adminImgHtml = `<img src="https://images.rbxcdn.com/16f50b06b0d9af7f3403aeec9db21f8a.png" class="admin-icon">`;
+        // Надежная иконка игрока Roblox, которая теперь точно сработает!
+        const adminImgHtml = `<img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" class="admin-icon">`;
 
         function tab(id, el) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
@@ -134,8 +132,8 @@
             
             document.getElementById('game-view').appendChild(c);
             
-            // Удаление ровно через 7 секунд
-            setTimeout(() => { if(c.parentNode) c.remove(); }, 7000);
+            // Удаление ровно через 5 секунд
+            setTimeout(() => { if(c.parentNode) c.remove(); }, 5000);
         }
 
         function showGlobal(text) {
