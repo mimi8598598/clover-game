@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Secret Project</title>
+    <title>Secret Cyber Runner</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --accent: #00f2fe; --pink: #fe0979; --gold: #ffd700; --bg: #07070c; }
+        :root { --neon-blue: #00f3ff; --neon-pink: #ff0055; --neon-green: #00ff66; --bg: #05050a; }
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; touch-action: none; }
         
         .screen { display: none; height: 100vh; width: 100vw; position: relative; }
         .screen.on { display: block; }
 
-        /* Игровой экран */
         #game-canvas { display: block; width: 100%; height: 100%; }
         
         #hud {
@@ -27,57 +26,34 @@
             padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 16px;
         }
 
-        /* Меню старта / проигрыша */
         #overlay {
-            position: absolute; inset: 0; background: rgba(7, 7, 12, 0.85);
+            position: absolute; inset: 0; background: rgba(5, 5, 10, 0.85);
             backdrop-filter: blur(6px); display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 20; padding: 20px; text-align: center;
         }
         #overlay h1 {
             font-size: 38px; margin: 0 0 10px;
-            background: linear-gradient(45deg, var(--accent), var(--pink));
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-pink));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
         }
         .btn {
-            background: linear-gradient(45deg, var(--accent), #4facfe); color: #000;
+            background: linear-gradient(45deg, var(--neon-blue), #0066ff); color: #000;
             border: none; padding: 16px 36px; border-radius: 14px; font-weight: 800;
             font-size: 16px; cursor: pointer; text-transform: uppercase;
-            box-shadow: 0 0 25px rgba(0, 242, 254, 0.4); margin-top: 15px; width: 100%; max-width: 280px;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4); margin-top: 15px; width: 100%; max-width: 280px;
         }
         .btn:active { transform: scale(0.96); }
 
-        /* Магазин и настройки */
-        .panel { padding: 20px 20px 90px; overflow-y: auto; height: 100%; }
-        .card {
-            background: #12121c; border: 1px solid #232336; padding: 18px;
-            border-radius: 16px; margin-bottom: 14px; display: flex;
-            justify-content: space-between; align-items: center;
-        }
-        .card-btn {
-            background: var(--gold); color: #000; border: none; padding: 10px 16px;
-            border-radius: 10px; font-weight: bold; cursor: pointer;
-        }
-        .card-btn:disabled { background: #333; color: #777; }
-        .input-box {
-            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #2d2d44;
-            background: #0c0c14; color: white; font-size: 16px; outline: none; margin-bottom: 10px;
-        }
-
-        /* Нижняя панель */
-        #nav {
-            position: fixed; bottom: 0; width: 100%; display: flex;
-            background: #0d0d15; border-top: 1px solid #1f1f2e; z-index: 100;
-        }
-        .nav-item {
-            flex: 1; text-align: center; padding: 16px 5px; cursor: pointer;
-            color: #666; font-size: 12px; font-weight: bold;
-        }
-        .nav-item.active { color: var(--accent); background: #141422; }
-
         #toast {
             display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--gold); color: #000; padding: 10px 22px; border-radius: 50px;
-            font-weight: bold; z-index: 999; box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
+            background: var(--neon-green); color: #000; padding: 10px 22px; border-radius: 50px;
+            font-weight: bold; z-index: 999; box-shadow: 0 5px 20px rgba(0, 255, 102, 0.5);
+        }
+
+        .hint {
+            position: absolute; bottom: 25px; width: 100%; text-align: center;
+            color: rgba(255, 255, 255, 0.4); font-size: 13px; pointer-events: none;
         }
     </style>
 </head>
@@ -85,64 +61,18 @@
 
     <div id="toast"></div>
 
-    <!-- ЭКРАН 1: ИГРА -->
     <div id="scr-game" class="screen on">
         <div id="hud">
-            <div class="badge" style="color: var(--gold);">💎 <span id="coins-hud">0</span></div>
-            <div class="badge" style="color: var(--accent);">🏆 <span id="best-hud">0</span></div>
+            <div class="badge" style="color: var(--neon-green);">💾 <span id="chips-hud">0</span></div>
+            <div class="badge" style="color: var(--neon-blue);">🏆 <span id="best-hud">0</span></div>
         </div>
         <canvas id="game-canvas"></canvas>
+        <div class="hint">Тапни в любом месте, чтобы перепрыгнуть препятствие!</div>
         <div id="overlay">
-            <h1 id="ov-title">NEON DODGE</h1>
-            <p id="ov-sub" style="color: #aaa; margin-bottom: 20px;">Уворачивайся от красных блоков и собирай кристаллы!</p>
-            <button class="btn" onclick="startGame()">ИГРАТЬ</button>
+            <h1 id="ov-title">CYBER RUNNER</h1>
+            <p id="ov-sub" style="color: #aaa; margin-bottom: 20px;">Прыгай по платформам, уворачивайся от дронов и собирай дата-чипы!</p>
+            <button class="btn" onclick="startGame()">ЗАПУСК</button>
         </div>
-    </div>
-
-    <!-- ЭКРАН 2: АПГРЕЙДЫ -->
-    <div id="scr-shop" class="screen">
-        <div class="panel">
-            <h2 style="text-align: center; color: var(--accent);">⚡ ПРОКАЧКА</h2>
-            <div class="card">
-                <div>
-                    <b>🧲 Магнит кристаллов</b><br>
-                    <small style="color: #888;">Уровень: <span id="lvl-mag">1</span></small>
-                </div>
-                <button class="card-btn" id="btn-mag" onclick="buyUpgrade('mag')">500 💎</button>
-            </div>
-            <div class="card">
-                <div>
-                    <b>🛡️ Энерго-щит</b><br>
-                    <small style="color: #888;">Спасает от 1 удара (Ур. <span id="lvl-shd">0</span>)</small>
-                </div>
-                <button class="card-btn" id="btn-shd" onclick="buyUpgrade('shd')">1000 💎</button>
-            </div>
-            <div class="card">
-                <div>
-                    <b>🔥 Двойные кристаллы</b><br>
-                    <small style="color: #888;">Множитель x<span id="lvl-mul">1</span></small>
-                </div>
-                <button class="card-btn" id="btn-mul" onclick="buyUpgrade('mul')">1500 💎</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ЭКРАН 3: СЕКРЕТЫ -->
-    <div id="scr-set" class="screen">
-        <div class="panel">
-            <h2 style="text-align: center; color: var(--gold);">⚙️ КОДЫ</h2>
-            <div class="card" style="display: block;">
-                <input type="text" id="cmd-input" class="input-box" placeholder="Введи секретный код...">
-                <button class="btn" style="max-width: 100%; margin-top: 5px;" onclick="runCmd()">АКТИВИРОВАТЬ</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- НАВИГАЦИЯ -->
-    <div id="nav">
-        <div class="nav-item active" onclick="switchTab('scr-game', this)">🚀 ИГРА</div>
-        <div class="nav-item" onclick="switchTab('scr-shop', this)">⚡ АПГРЕЙД</div>
-        <div class="nav-item" onclick="switchTab('scr-set', this)">⚙️ КОДЫ</div>
     </div>
 
     <script>
@@ -151,191 +81,267 @@
             Telegram.WebApp.expand();
         }
 
-        let state = JSON.parse(localStorage.getItem('secret_game_v1')) || {
-            coins: 0, best: 0, mag: 1, shd: 0, mul: 1
+        let state = JSON.parse(localStorage.getItem('cyber_runner_v1')) || {
+            chips: 0, best: 0
         };
 
         function save() {
-            localStorage.setItem('secret_game_v1', JSON.stringify(state));
-            document.getElementById('coins-hud').innerText = state.coins.toLocaleString();
+            localStorage.setItem('cyber_runner_v1', JSON.stringify(state));
+            document.getElementById('chips-hud').innerText = state.chips.toLocaleString();
             document.getElementById('best-hud').innerText = state.best.toLocaleString();
-            document.getElementById('lvl-mag').innerText = state.mag;
-            document.getElementById('lvl-shd').innerText = state.shd;
-            document.getElementById('lvl-mul').innerText = state.mul;
-            document.getElementById('btn-mag').innerText = (state.mag * 500) + ' 💎';
-            document.getElementById('btn-shd').innerText = ((state.shd + 1) * 1000) + ' 💎';
-            document.getElementById('btn-mul').innerText = (state.mul * 1500) + ' 💎';
         }
 
         function notify(txt) {
             const t = document.getElementById('toast');
             t.innerText = txt;
             t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 2500);
+            setTimeout(() => t.style.display = 'none', 2000);
         }
 
-        function switchTab(id, el) {
-            if (running) running = false;
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
-            document.getElementById(id).classList.add('on');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            el.classList.add('active');
-            if (id === 'scr-game') document.getElementById('overlay').style.display = 'flex';
-        }
-
-        function buyUpgrade(type) {
-            let cost = type === 'mag' ? state.mag * 500 : type === 'shd' ? (state.shd + 1) * 1000 : state.mul * 1500;
-            if (state.coins < cost) return notify('❌ Не хватает кристаллов!');
-            state.coins -= cost;
-            state[type]++;
-            save();
-            notify('✅ Улучшено!');
-        }
-
-        function runCmd() {
-            let val = document.getElementById('cmd-input').value.trim().toLowerCase();
-            if (val === '/6633') {
-                state.coins += 5000000;
-                notify('👑 +5,000,000 💎');
-            } else if (val.startsWith('/money')) {
-                let n = parseInt(val.split(' ')[1]) || 10000;
-                state.coins += n;
-                notify('💎 +' + n.toLocaleString());
-            } else if (val === '/reset') {
-                localStorage.removeItem('secret_game_v1');
-                location.reload();
-            } else {
-                notify('❓ Неизвестный код');
-            }
-            document.getElementById('cmd-input').value = '';
-            save();
-        }
-
-        // Движок игры
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
-        let running = false, score = 0, player = { x: 0, y: 0, r: 16, shield: false };
-        let items = [], frame = 0;
+        
+        let running = false;
+        let score = 0;
+        let gameSpeed = 6;
+        let obstacles = [];
+        let particles = [];
+
+        let player = {
+            x: 80,
+            y: 0,
+            w: 30,
+            h: 40,
+            vy: 0,
+            jumpForce: -12,
+            gravity: 0.6,
+            grounded: false
+        };
 
         function resize() {
             canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight - 50;
+            canvas.height = window.innerHeight;
+            player.y = canvas.height - 120 - player.h;
         }
         window.addEventListener('resize', resize);
         resize();
 
-        function movePlayer(clientX) {
-            player.x = Math.max(player.r, Math.min(canvas.width - player.r, clientX));
+        // Управление прыжком по тапу/клику
+        window.addEventListener('pointerdown', (e) => {
+            if (!running) return;
+            // Игнорируем нажатия на элементы интерфейса если таковые будут
+            if (e.target.closest('#hud')) return;
+            
+            if (player.grounded) {
+                player.vy = player.jumpForce;
+                player.grounded = false;
+                createJumpParticles();
+            }
+        });
+
+        function createJumpParticles() {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: player.x + player.w / 2,
+                    y: player.y + player.h,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: Math.random() * 2,
+                    color: '#00f3ff',
+                    life: 20
+                });
+            }
         }
-        canvas.addEventListener('touchmove', e => { e.preventDefault(); movePlayer(e.touches[0].clientX); }, { passive: false });
-        canvas.addEventListener('mousemove', e => { if (running) movePlayer(e.clientX); });
 
         function startGame() {
             resize();
             document.getElementById('overlay').style.display = 'none';
-            player.x = canvas.width / 2;
-            player.y = canvas.height - 90;
-            player.shield = state.shd > 0;
-            items = [];
+            obstacles = [];
+            particles = [];
             score = 0;
-            frame = 0;
+            gameSpeed = 6;
+            player.y = canvas.height - 120 - player.h;
+            player.vy = 0;
+            player.grounded = true;
             running = true;
             loop();
         }
 
-        function loop() {
-            if (!running) return;
-            ctx.fillStyle = 'rgba(7, 7, 12, 0.35)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            frame++;
-            score++;
-            let speed = 4 + Math.min(8, score / 400);
-
-            if (frame % Math.max(12, 32 - Math.floor(score / 300)) === 0) {
-                let isGem = Math.random() < 0.35;
-                items.push({
-                    x: Math.random() * (canvas.width - 30) + 15,
-                    y: -20,
-                    size: isGem ? 12 : 18 + Math.random() * 14,
-                    type: isGem ? 'gem' : 'enemy',
-                    vy: speed + Math.random() * 2
+        function spawnObstacle() {
+            let type = Math.random();
+            let groundY = canvas.height - 120;
+            
+            if (type < 0.6) {
+                // Красный кибер-блок на земле
+                obstacles.push({
+                    x: canvas.width + 50,
+                    y: groundY - 35,
+                    w: 30,
+                    h: 35,
+                    type: 'block',
+                    color: '#ff0055'
+                });
+            } else {
+                // Летающий дрон (нужно пропустить или вовремя рассчитать прыжок)
+                obstacles.push({
+                    x: canvas.width + 50,
+                    y: groundY - 75 - Math.random() * 40,
+                    w: 35,
+                    h: 20,
+                    type: 'drone',
+                    color: '#ffd700'
                 });
             }
+        }
 
-            // Игрок
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
-            ctx.fillStyle = '#00f2fe';
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#00f2fe';
-            ctx.fill();
-            ctx.shadowBlur = 0;
+        let spawnTimer = 0;
 
-            if (player.shield) {
+        function update() {
+            if (!running) return;
+
+            score++;
+            gameSpeed = 6 + Math.floor(score / 350); // Постепенное ускорение
+
+            // Гравитация и прыжок игрока
+            player.vy += player.gravity;
+            player.y += player.vy;
+
+            let groundY = canvas.height - 120;
+            if (player.y >= groundY - player.h) {
+                player.y = groundY - player.h;
+                player.vy = 0;
+                player.grounded = true;
+            }
+
+            // Спавн препятствий
+            spawnTimer++;
+            let spawnInterval = Math.max(50, 110 - Math.floor(score / 100));
+            if (spawnTimer >= spawnInterval) {
+                spawnObstacle();
+                spawnTimer = 0;
+            }
+
+            // Движение препятствий
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.x -= gameSpeed;
+
+                // Проверка столкновения (AABB)
+                let collisionMargin = 6;
+                if (
+                    player.x + collisionMargin < obs.x + obs.w - collisionMargin &&
+                    player.x + player.w - collisionMargin > obs.x + collisionMargin &&
+                    player.y + collisionMargin < obs.y + obs.h - collisionMargin &&
+                    player.y + player.h - collisionMargin > obs.y + collisionMargin
+                ) {
+                    // Конец игры
+                    running = false;
+                    if (score > state.best) {
+                        state.best = score;
+                    }
+                    state.chips += Math.floor(score / 10);
+                    save();
+
+                    document.getElementById('ov-title').innerText = 'SYSTEM CRASH';
+                    document.getElementById('ov-sub').innerText = `Дистанция: ${score} | Чипы: +${Math.floor(score / 10)} 💾\nРекорд: ${state.best}`;
+                    document.getElementById('overlay').style.display = 'flex';
+                    return;
+                }
+
+                // Удаление улетевших препятствий
+                if (obs.x + obs.w < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // Обновление частиц
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
+
+        function draw() {
+            // Очистка экрана
+            ctx.fillStyle = '#05050a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            let groundY = canvas.height - 120;
+
+            // Неоновый фон (линии сетки киберпространства)
+            ctx.strokeStyle = 'rgba(0, 243, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < canvas.width; x += 40) {
                 ctx.beginPath();
-                ctx.arc(player.x, player.y, player.r + 7, 0, Math.PI * 2);
-                ctx.strokeStyle = '#00ff88';
-                ctx.lineWidth = 2;
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, groundY);
                 ctx.stroke();
             }
 
-            // Объекты
-            for (let i = items.length - 1; i >= 0; i--) {
-                let it = items[i];
-                it.y += it.vy;
+            // Земля / кибер-дорога
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#00f3ff';
+            ctx.strokeStyle = '#00f3ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(canvas.width, groundY);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
 
-                if (it.type === 'gem' && state.mag > 1) {
-                    let dx = player.x - it.x, dy = player.y - it.y;
-                    let dist = Math.hypot(dx, dy);
-                    if (dist < 60 + state.mag * 35) {
-                        it.x += (dx / dist) * 6;
-                        it.y += (dy / dist) * 6;
-                    }
-                }
+            // Заливка под дорогой
+            ctx.fillStyle = 'rgba(0, 243, 255, 0.05)';
+            ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
 
-                if (it.type === 'gem') {
-                    ctx.fillStyle = '#ffd700';
+            // Отрисовка игрока (кибер-агент)
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00f3ff';
+            ctx.fillStyle = '#00f3ff';
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+            
+            // Внутренний элемент игрока (шлем/визор)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + 15, player.y + 8, 10, 6);
+            ctx.shadowBlur = 0;
+
+            // Отрисовка препятствий
+            for (let obs of obstacles) {
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = obs.color;
+                ctx.fillStyle = obs.color;
+                
+                if (obs.type === 'drone') {
+                    // Отрисовка дрона в виде ромба
                     ctx.beginPath();
-                    ctx.moveTo(it.x, it.y - it.size);
-                    ctx.lineTo(it.x + it.size, it.y);
-                    ctx.lineTo(it.x, it.y + it.size);
-                    ctx.lineTo(it.x - it.size, it.y);
-                    ctx.closePath();
+                    ctx.arc(obs.x + obs.w/2, obs.y + obs.h/2, obs.w/2, 0, Math.PI * 2);
                     ctx.fill();
                 } else {
-                    ctx.fillStyle = '#fe0979';
-                    ctx.fillRect(it.x - it.size / 2, it.y - it.size / 2, it.size, it.size);
+                    ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
                 }
-
-                let hit = Math.hypot(player.x - it.x, player.y - it.y) < player.r + it.size * 0.7;
-                if (hit) {
-                    if (it.type === 'gem') {
-                        state.coins += 10 * state.mul;
-                        save();
-                        items.splice(i, 1);
-                        continue;
-                    } else {
-                        if (player.shield) {
-                            player.shield = false;
-                            items.splice(i, 1);
-                            notify('🛡️ Щит спас!');
-                            continue;
-                        } else {
-                            running = false;
-                            if (score > state.best) state.best = score;
-                            save();
-                            document.getElementById('ov-title').innerText = 'GAME OVER';
-                            document.getElementById('ov-sub').innerText = `Счёт: ${score} | Рекорд: ${state.best}`;
-                            document.getElementById('overlay').style.display = 'flex';
-                            return;
-                        }
-                    }
-                }
-                if (it.y > canvas.height + 30) items.splice(i, 1);
+                ctx.shadowBlur = 0;
             }
 
-            requestAnimationFrame(loop);
+            // Отрисовка частиц
+            for (let p of particles) {
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 3, 3);
+            }
+
+            // Текущий счет прямо на холсте
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = 'bold 22px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(`СЧЕТ: ${score}`, canvas.width - 20, 70);
+        }
+
+        function loop() {
+            update();
+            draw();
+            if (running) {
+                requestAnimationFrame(loop);
+            }
         }
 
         save();
