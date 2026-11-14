@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Secret Project</title>
+    <title>Neon Dodge Ultimate</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --accent: #00f2fe; --pink: #fe0979; --gold: #ffd700; --bg: #07070c; }
@@ -151,12 +151,12 @@
             Telegram.WebApp.expand();
         }
 
-        let state = JSON.parse(localStorage.getItem('secret_game_v1')) || {
+        let state = JSON.parse(localStorage.getItem('neon_dodge_clean_v2')) || {
             coins: 0, best: 0, mag: 1, shd: 0, mul: 1
         };
 
         function save() {
-            localStorage.setItem('secret_game_v1', JSON.stringify(state));
+            localStorage.setItem('neon_dodge_clean_v2', JSON.stringify(state));
             document.getElementById('coins-hud').innerText = state.coins.toLocaleString();
             document.getElementById('best-hud').innerText = state.best.toLocaleString();
             document.getElementById('lvl-mag').innerText = state.mag;
@@ -202,7 +202,7 @@
                 state.coins += n;
                 notify('💎 +' + n.toLocaleString());
             } else if (val === '/reset') {
-                localStorage.removeItem('secret_game_v1');
+                localStorage.removeItem('neon_dodge_clean_v2');
                 location.reload();
             } else {
                 notify('❓ Неизвестный код');
