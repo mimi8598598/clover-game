@@ -3,211 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Dodge</title>
+    <title>Secret Project</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #0b0b16;
-            color: #fff;
-            font-family: sans-serif;
-            overflow: hidden;
-            touch-action: none;
+        :root { --accent: #00f2fe; --pink: #fe0979; --gold: #ffd700; --bg: #07070c; }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; touch-action: none; }
+        
+        .screen { display: none; height: 100vh; width: 100vw; position: relative; }
+        .screen.on { display: block; }
+
+        /* Игровой экран */
+        #game-canvas { display: block; width: 100%; height: 100%; }
+        
+        #hud {
+            position: absolute; top: 15px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            pointer-events: none; z-index: 10;
+        }
+        .badge {
+            background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 16px;
         }
 
-        canvas {
-            display: block;
-            background: #0b0b16;
+        /* Меню старта / проигрыша */
+        #overlay {
+            position: absolute; inset: 0; background: rgba(7, 7, 12, 0.85);
+            backdrop-filter: blur(6px); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 20; padding: 20px; text-align: center;
+        }
+        #overlay h1 {
+            font-size: 38px; margin: 0 0 10px;
+            background: linear-gradient(45deg, var(--accent), var(--pink));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .btn {
+            background: linear-gradient(45deg, var(--accent), #4facfe); color: #000;
+            border: none; padding: 16px 36px; border-radius: 14px; font-weight: 800;
+            font-size: 16px; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.4); margin-top: 15px; width: 100%; max-width: 280px;
+        }
+        .btn:active { transform: scale(0.96); }
+
+        /* Магазин и настройки */
+        .panel { padding: 20px 20px 90px; overflow-y: auto; height: 100%; }
+        .card {
+            background: #12121c; border: 1px solid #232336; padding: 18px;
+            border-radius: 16px; margin-bottom: 14px; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .card-btn {
+            background: var(--gold); color: #000; border: none; padding: 10px 16px;
+            border-radius: 10px; font-weight: bold; cursor: pointer;
+        }
+        .card-btn:disabled { background: #333; color: #777; }
+        .input-box {
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #2d2d44;
+            background: #0c0c14; color: white; font-size: 16px; outline: none; margin-bottom: 10px;
         }
 
-        /* Кнопка UPDATE (сдвинута ниже крестика Telegram) */
-        .update-btn {
-            position: absolute;
-            top: 60px;
-            left: 15px;
-            background: rgba(15, 15, 30, 0.85);
-            border: 2px solid #00f3ff;
-            color: #00f3ff;
-            padding: 8px 14px;
-            border-radius: 12px;
-            font-family: sans-serif;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
-            z-index: 100;
+        /* Нижняя панель */
+        #nav {
+            position: fixed; bottom: 0; width: 100%; display: flex;
+            background: #0d0d15; border-top: 1px solid #1f1f2e; z-index: 100;
         }
+        .nav-item {
+            flex: 1; text-align: center; padding: 16px 5px; cursor: pointer;
+            color: #666; font-size: 12px; font-weight: bold;
+        }
+        .nav-item.active { color: var(--accent); background: #141422; }
 
-        .update-btn:active {
-            transform: scale(0.95);
+        #toast {
+            display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--gold); color: #000; padding: 10px 22px; border-radius: 50px;
+            font-weight: bold; z-index: 999; box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
         }
     </style>
 </head>
 <body>
 
-    <!-- Кнопка обновления -->
-    <button class="update-btn" onclick="alert('Скоро здесь появится информация об обновлении!')">⏳ UPDATE</button>
+    <div id="toast"></div>
 
-    <canvas id="gameCanvas"></canvas>
+    <!-- ЭКРАН 1: ИГРА -->
+    <div id="scr-game" class="screen on">
+        <div id="hud">
+            <div class="badge" style="color: var(--gold);">💎 <span id="coins-hud">0</span></div>
+            <div class="badge" style="color: var(--accent);">🏆 <span id="best-hud">0</span></div>
+        </div>
+        <canvas id="game-canvas"></canvas>
+        <div id="overlay">
+            <h1 id="ov-title">NEON DODGE</h1>
+            <p id="ov-sub" style="color: #aaa; margin-bottom: 20px;">Уворачивайся от красных блоков и собирай кристаллы!</p>
+            <button class="btn" onclick="startGame()">ИГРАТЬ</button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 2: АПГРЕЙДЫ -->
+    <div id="scr-shop" class="screen">
+        <div class="panel">
+            <h2 style="text-align: center; color: var(--accent);">⚡ ПРОКАЧКА</h2>
+            <div class="card">
+                <div>
+                    <b>🧲 Магнит кристаллов</b><br>
+                    <small style="color: #888;">Уровень: <span id="lvl-mag">1</span></small>
+                </div>
+                <button class="card-btn" id="btn-mag" onclick="buyUpgrade('mag')">500 💎</button>
+            </div>
+            <div class="card">
+                <div>
+                    <b>🛡️ Энерго-щит</b><br>
+                    <small style="color: #888;">Спасает от 1 удара (Ур. <span id="lvl-shd">0</span>)</small>
+                </div>
+                <button class="card-btn" id="btn-shd" onclick="buyUpgrade('shd')">1000 💎</button>
+            </div>
+            <div class="card">
+                <div>
+                    <b>🔥 Двойные кристаллы</b><br>
+                    <small style="color: #888;">Множитель x<span id="lvl-mul">1</span></small>
+                </div>
+                <button class="card-btn" id="btn-mul" onclick="buyUpgrade('mul')">1500 💎</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 3: СЕКРЕТЫ -->
+    <div id="scr-set" class="screen">
+        <div class="panel">
+            <h2 style="text-align: center; color: var(--gold);">⚙️ КОДЫ</h2>
+            <div class="card" style="display: block;">
+                <input type="text" id="cmd-input" class="input-box" placeholder="Введи секретный код...">
+                <button class="btn" style="max-width: 100%; margin-top: 5px;" onclick="runCmd()">АКТИВИРОВАТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- НАВИГАЦИЯ -->
+    <div id="nav">
+        <div class="nav-item active" onclick="switchTab('scr-game', this)">🚀 ИГРА</div>
+        <div class="nav-item" onclick="switchTab('scr-shop', this)">⚡ АПГРЕЙД</div>
+        <div class="nav-item" onclick="switchTab('scr-set', this)">⚙️ КОДЫ</div>
+    </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // Подгоняем холст под размеры экрана
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        if (window.Telegram && window.Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
 
-        // Игрок
-        const player = {
-            x: canvas.width / 2,
-            y: canvas.height - 100,
-            radius: 18,
-            color: '#00f3ff',
-            speed: 6,
-            targetX: canvas.width / 2
+        let state = JSON.parse(localStorage.getItem('secret_game_v1')) || {
+            coins: 0, best: 0, mag: 1, shd: 0, mul: 1
         };
 
-        let obstacles = [];
-        let score = 0;
-        let isGameOver = false;
-        let gameInterval;
-        let obstacleTimer = 0;
-
-        // Управление касанием / мышкой
-        window.addEventListener('pointermove', (e) => {
-            player.targetX = e.clientX;
-        });
-
-        window.addEventListener('pointerdown', (e) => {
-            player.targetX = e.clientX;
-            if (isGameOver) {
-                resetGame();
-            }
-        });
-
-        function spawnObstacle() {
-            const radius = Math.random() * 15 + 15;
-            const x = Math.random() * (canvas.width - radius * 2) + radius;
-            const y = -radius;
-            const speed = Math.random() * 3 + 3;
-            const color = Math.random() > 0.5 ? '#ff007f' : '#b000ff';
-
-            obstacles.push({ x, y, radius, speed, color });
+        function save() {
+            localStorage.setItem('secret_game_v1', JSON.stringify(state));
+            document.getElementById('coins-hud').innerText = state.coins.toLocaleString();
+            document.getElementById('best-hud').innerText = state.best.toLocaleString();
+            document.getElementById('lvl-mag').innerText = state.mag;
+            document.getElementById('lvl-shd').innerText = state.shd;
+            document.getElementById('lvl-mul').innerText = state.mul;
+            document.getElementById('btn-mag').innerText = (state.mag * 500) + ' 💎';
+            document.getElementById('btn-shd').innerText = ((state.shd + 1) * 1000) + ' 💎';
+            document.getElementById('btn-mul').innerText = (state.mul * 1500) + ' 💎';
         }
 
-        function resetGame() {
-            obstacles = [];
-            score = 0;
-            isGameOver = false;
+        function notify(txt) {
+            const t = document.getElementById('toast');
+            t.innerText = txt;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2500);
+        }
+
+        function switchTab(id, el) {
+            if (running) running = false;
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+            document.getElementById(id).classList.add('on');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            if (id === 'scr-game') document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function buyUpgrade(type) {
+            let cost = type === 'mag' ? state.mag * 500 : type === 'shd' ? (state.shd + 1) * 1000 : state.mul * 1500;
+            if (state.coins < cost) return notify('❌ Не хватает кристаллов!');
+            state.coins -= cost;
+            state[type]++;
+            save();
+            notify('✅ Улучшено!');
+        }
+
+        function runCmd() {
+            let val = document.getElementById('cmd-input').value.trim().toLowerCase();
+            if (val === '/6633') {
+                state.coins += 5000000;
+                notify('👑 +5,000,000 💎');
+            } else if (val.startsWith('/money')) {
+                let n = parseInt(val.split(' ')[1]) || 10000;
+                state.coins += n;
+                notify('💎 +' + n.toLocaleString());
+            } else if (val === '/reset') {
+                localStorage.removeItem('secret_game_v1');
+                location.reload();
+            } else {
+                notify('❓ Неизвестный код');
+            }
+            document.getElementById('cmd-input').value = '';
+            save();
+        }
+
+        // Движок игры
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        let running = false, score = 0, player = { x: 0, y: 0, r: 16, shield: false };
+        let items = [], frame = 0;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - 50;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function movePlayer(clientX) {
+            player.x = Math.max(player.r, Math.min(canvas.width - player.r, clientX));
+        }
+        canvas.addEventListener('touchmove', e => { e.preventDefault(); movePlayer(e.touches[0].clientX); }, { passive: false });
+        canvas.addEventListener('mousemove', e => { if (running) movePlayer(e.clientX); });
+
+        function startGame() {
+            resize();
+            document.getElementById('overlay').style.display = 'none';
             player.x = canvas.width / 2;
-            player.targetX = canvas.width / 2;
+            player.y = canvas.height - 90;
+            player.shield = state.shd > 0;
+            items = [];
+            score = 0;
+            frame = 0;
+            running = true;
             loop();
         }
 
-        function update() {
-            if (isGameOver) return;
-
-            // Плавное движение игрока за пальцем/мышкой
-            player.x += (player.targetX - player.x) * 0.2;
-
-            // Ограничение в пределах экрана
-            if (player.x < player.radius) player.x = player.radius;
-            if (player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
-
-            // Спавн препятствий
-            obstacleTimer++;
-            if (obstacleTimer > 35) {
-                spawnObstacle();
-                obstacleTimer = 0;
-            }
-
-            // Движение препятствий и проверка столкновений
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                let obs = obstacles[i];
-                obs.y += obs.speed;
-
-                // Проверка столкновения с игроком (коллизия кругов)
-                const dx = player.x - obs.x;
-                const dy = player.y - obs.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < player.radius + obs.radius) {
-                    isGameOver = true;
-                }
-
-                // Удаление улетевших препятствий и начисление очков
-                if (obs.y - obs.radius > canvas.height) {
-                    obstacles.splice(i, 1);
-                    score += 10;
-                }
-            }
-        }
-
-        function draw() {
-            // Очистка экрана
-            ctx.fillStyle = '#0b0b16';
+        function loop() {
+            if (!running) return;
+            ctx.fillStyle = 'rgba(7, 7, 12, 0.35)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Отрисовка игрока с неоновым свечением
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = player.color;
-            ctx.fillStyle = player.color;
+            frame++;
+            score++;
+            let speed = 4 + Math.min(8, score / 400);
+
+            if (frame % Math.max(12, 32 - Math.floor(score / 300)) === 0) {
+                let isGem = Math.random() < 0.35;
+                items.push({
+                    x: Math.random() * (canvas.width - 30) + 15,
+                    y: -20,
+                    size: isGem ? 12 : 18 + Math.random() * 14,
+                    type: isGem ? 'gem' : 'enemy',
+                    vy: speed + Math.random() * 2
+                });
+            }
+
+            // Игрок
             ctx.beginPath();
-            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
+            ctx.fillStyle = '#00f2fe';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00f2fe';
             ctx.fill();
+            ctx.shadowBlur = 0;
 
-            // Отрисовка препятствий
-            for (let obs of obstacles) {
-                ctx.shadowBlur = 12;
-                ctx.shadowColor = obs.color;
-                ctx.fillStyle = obs.color;
+            if (player.shield) {
                 ctx.beginPath();
-                ctx.arc(obs.x, obs.y, obs.radius, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.arc(player.x, player.y, player.r + 7, 0, Math.PI * 2);
+                ctx.strokeStyle = '#00ff88';
+                ctx.lineWidth = 2;
+                ctx.stroke();
             }
 
-            ctx.shadowBlur = 0; // Сбрасываем свечение для текста
+            // Объекты
+            for (let i = items.length - 1; i >= 0; i--) {
+                let it = items[i];
+                it.y += it.vy;
 
-            // Вывод счета
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 20px sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText(`Счет: ${score}`, 20, 120);
+                if (it.type === 'gem' && state.mag > 1) {
+                    let dx = player.x - it.x, dy = player.y - it.y;
+                    let dist = Math.hypot(dx, dy);
+                    if (dist < 60 + state.mag * 35) {
+                        it.x += (dx / dist) * 6;
+                        it.y += (dy / dist) * 6;
+                    }
+                }
 
-            // Экран Game Over
-            if (isGameOver) {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (it.type === 'gem') {
+                    ctx.fillStyle = '#ffd700';
+                    ctx.beginPath();
+                    ctx.moveTo(it.x, it.y - it.size);
+                    ctx.lineTo(it.x + it.size, it.y);
+                    ctx.lineTo(it.x, it.y + it.size);
+                    ctx.lineTo(it.x - it.size, it.y);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#fe0979';
+                    ctx.fillRect(it.x - it.size / 2, it.y - it.size / 2, it.size, it.size);
+                }
 
-                ctx.fillStyle = '#ff007f';
-                ctx.font = 'bold 36px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('ИГРА ОКОНЧЕНА', canvas.width / 2, canvas.height / 2 - 30);
-
-                ctx.fillStyle = '#fff';
-                ctx.font = '18px sans-serif';
-                ctx.fillText(`Ваш счет: ${score}`, canvas.width / 2, canvas.height / 2 + 10);
-                
-                ctx.fillStyle = '#00f3ff';
-                ctx.fillText('Нажмите, чтобы начать заново', canvas.width / 2, canvas.height / 2 + 60);
+                let hit = Math.hypot(player.x - it.x, player.y - it.y) < player.r + it.size * 0.7;
+                if (hit) {
+                    if (it.type === 'gem') {
+                        state.coins += 10 * state.mul;
+                        save();
+                        items.splice(i, 1);
+                        continue;
+                    } else {
+                        if (player.shield) {
+                            player.shield = false;
+                            items.splice(i, 1);
+                            notify('🛡️ Щит спас!');
+                            continue;
+                        } else {
+                            running = false;
+                            if (score > state.best) state.best = score;
+                            save();
+                            document.getElementById('ov-title').innerText = 'GAME OVER';
+                            document.getElementById('ov-sub').innerText = `Счёт: ${score} | Рекорд: ${state.best}`;
+                            document.getElementById('overlay').style.display = 'flex';
+                            return;
+                        }
+                    }
+                }
+                if (it.y > canvas.height + 30) items.splice(i, 1);
             }
+
+            requestAnimationFrame(loop);
         }
 
-        function loop() {
-            update();
-            draw();
-            if (!isGameOver) {
-                requestAnimationFrame(loop);
-            }
-        }
-
-        // Запуск игрового цикла
-        loop();
+        save();
     </script>
 </body>
 </html>
