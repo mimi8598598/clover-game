@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Dodge - Update Countdown</title>
+    <title>Neon Dodge</title>
     <style>
         body {
             margin: 0;
@@ -20,42 +20,12 @@
             background: #0b0b16;
         }
 
-        /* Полупрозрачная блокировка поверх игры, чтобы играть было нельзя */
-        .game-lock-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(11, 11, 22, 0.55);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            z-index: 50;
-            pointer-events: auto;
-        }
-
-        .game-lock-overlay h1 {
-            font-size: 30px;
-            color: #00f3ff;
-            text-shadow: 0 0 12px rgba(0, 243, 255, 0.6);
-            margin: 0 0 8px 0;
-        }
-
-        .game-lock-overlay p {
-            font-size: 15px;
-            color: #ccc;
-            margin: 0;
-        }
-
-        /* Кнопка UPDATE (ниже крестика Telegram) */
+        /* Кнопка UPDATE (сдвинута ниже крестика Telegram) */
         .update-btn {
-            position: fixed;
+            position: absolute;
             top: 60px;
             left: 15px;
-            background: rgba(15, 15, 30, 0.9);
+            background: rgba(15, 15, 30, 0.85);
             border: 2px solid #00f3ff;
             color: #00f3ff;
             padding: 8px 14px;
@@ -64,146 +34,27 @@
             font-weight: bold;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 0 12px rgba(0, 243, 255, 0.5);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
             z-index: 100;
         }
 
         .update-btn:active {
             transform: scale(0.95);
         }
-
-        /* Всплывающее окно с таймером */
-        .update-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .update-card {
-            background: #14142b;
-            border: 2px solid #ff007f;
-            border-radius: 16px;
-            width: 85%;
-            max-width: 320px;
-            overflow: hidden;
-            text-align: center;
-            box-shadow: 0 0 25px rgba(255, 0, 127, 0.5);
-            font-family: sans-serif;
-            color: white;
-        }
-
-        .update-banner {
-            background: linear-gradient(135deg, #1f1c2c, #928dab);
-            height: 130px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        .update-date-badge {
-            position: absolute;
-            top: 10px; left: 10px;
-            background: rgba(0, 0, 0, 0.75);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            color: #00f3ff;
-        }
-
-        .update-mystery {
-            font-size: 48px;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 15px #ff007f;
-            letter-spacing: 4px;
-        }
-
-        .update-body {
-            padding: 16px;
-        }
-
-        .update-timer {
-            font-size: 22px;
-            font-weight: bold;
-            color: #00f3ff;
-            margin: 10px 0;
-            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
-        }
-
-        .notify-btn {
-            width: 100%;
-            padding: 10px;
-            background: #ff007f;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
-            font-size: 15px;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-
-        .notify-btn.subscribed {
-            background: #28a745;
-        }
-
-        .close-modal {
-            margin-top: 10px;
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 13px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Кнопка открытия таймера -->
-    <button class="update-btn" onclick="openUpdateModal()">⏳ UPDATE</button>
-
-    <!-- Блокирующий экран поверх игры -->
-    <div class="game-lock-overlay" id="lockOverlay">
-        <h1>NEON DODGE</h1>
-        <p>Игра закрыта до выхода обновления 🔒</p>
-        <p style="font-size: 13px; color: #00f3ff; margin-top: 6px;">Нажми UPDATE сверху, чтобы увидеть таймер</p>
-    </div>
-
-    <!-- Окно с таймером -->
-    <div class="update-modal" id="updateModal">
-        <div class="update-card">
-            <div class="update-banner">
-                <div class="update-date-badge">14 Ноя в 16:00 (GMT)</div>
-                <div class="update-mystery">???</div>
-            </div>
-            <div class="update-body">
-                <h3 style="margin: 0; font-size: 18px;">NEXT UPDATE!</h3>
-                <p style="margin: 4px 0; font-size: 12px; color: #bbb;">Не пропусти выход новой версии</p>
-                
-                <div class="update-timer" id="countdownTimer">00д 00ч 00м 00с</div>
-                
-                <button class="notify-btn" id="notifyBtn" onclick="toggleNotify()">🔔 Notify Me</button>
-                <button class="close-modal" onclick="closeUpdateModal()">Закрыть</button>
-            </div>
-        </div>
-    </div>
+    <!-- Кнопка обновления -->
+    <button class="update-btn" onclick="alert('Скоро здесь появится информация об обновлении!')">⏳ UPDATE</button>
 
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // --- ЛОГИКА ИГРЫ ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Флаг блокировки игры до выхода обновления
-        let isGameLocked = true;
-
+        // Подгоняем холст под размеры экрана
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -211,30 +62,28 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
+        // Игрок
         const player = {
             x: canvas.width / 2,
             y: canvas.height - 100,
             radius: 18,
             color: '#00f3ff',
+            speed: 6,
             targetX: canvas.width / 2
         };
 
         let obstacles = [];
         let score = 0;
         let isGameOver = false;
+        let gameInterval;
         let obstacleTimer = 0;
 
-        // Заранее ставим пару декоративных препятствий на фоне, пока игра на паузе
-        obstacles.push({ x: canvas.width * 0.3, y: canvas.height * 0.3, radius: 22, speed: 4, color: '#ff007f' });
-        obstacles.push({ x: canvas.width * 0.7, y: canvas.height * 0.5, radius: 18, speed: 4, color: '#b000ff' });
-
+        // Управление касанием / мышкой
         window.addEventListener('pointermove', (e) => {
-            if (isGameLocked) return;
             player.targetX = e.clientX;
         });
 
         window.addEventListener('pointerdown', (e) => {
-            if (isGameLocked) return;
             player.targetX = e.clientX;
             if (isGameOver) {
                 resetGame();
@@ -261,23 +110,28 @@
         }
 
         function update() {
-            if (isGameOver || isGameLocked) return;
+            if (isGameOver) return;
 
+            // Плавное движение игрока за пальцем/мышкой
             player.x += (player.targetX - player.x) * 0.2;
 
+            // Ограничение в пределах экрана
             if (player.x < player.radius) player.x = player.radius;
             if (player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
 
+            // Спавн препятствий
             obstacleTimer++;
             if (obstacleTimer > 35) {
                 spawnObstacle();
                 obstacleTimer = 0;
             }
 
+            // Движение препятствий и проверка столкновений
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 let obs = obstacles[i];
                 obs.y += obs.speed;
 
+                // Проверка столкновения с игроком (коллизия кругов)
                 const dx = player.x - obs.x;
                 const dy = player.y - obs.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -286,6 +140,7 @@
                     isGameOver = true;
                 }
 
+                // Удаление улетевших препятствий и начисление очков
                 if (obs.y - obs.radius > canvas.height) {
                     obstacles.splice(i, 1);
                     score += 10;
@@ -294,10 +149,11 @@
         }
 
         function draw() {
+            // Очистка экрана
             ctx.fillStyle = '#0b0b16';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Игрок на фоне
+            // Отрисовка игрока с неоновым свечением
             ctx.shadowBlur = 15;
             ctx.shadowColor = player.color;
             ctx.fillStyle = player.color;
@@ -305,7 +161,7 @@
             ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
             ctx.fill();
 
-            // Препятствия на фоне
+            // Отрисовка препятствий
             for (let obs of obstacles) {
                 ctx.shadowBlur = 12;
                 ctx.shadowColor = obs.color;
@@ -315,16 +171,16 @@
                 ctx.fill();
             }
 
-            ctx.shadowBlur = 0;
+            ctx.shadowBlur = 0; // Сбрасываем свечение для текста
 
-            if (!isGameLocked) {
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 20px sans-serif';
-                ctx.textAlign = 'left';
-                ctx.fillText(`Счет: ${score}`, 20, 120);
-            }
+            // Вывод счета
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Счет: ${score}`, 20, 120);
 
-            if (isGameOver && !isGameLocked) {
+            // Экран Game Over
+            if (isGameOver) {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -350,54 +206,8 @@
             }
         }
 
+        // Запуск игрового цикла
         loop();
-
-        // --- ЛОГИКА ТАЙМЕРА ОБНОВЛЕНИЯ ---
-        // 14 ноября 2026 года, 16:00 по времени Ирландии (GMT/UTC)
-        const targetUpdateDate = Date.UTC(2026, 10, 14, 16, 0, 0);
-
-        function openUpdateModal() {
-            document.getElementById('updateModal').style.display = 'flex';
-        }
-
-        function closeUpdateModal() {
-            document.getElementById('updateModal').style.display = 'none';
-        }
-
-        function toggleNotify() {
-            const btn = document.getElementById('notifyBtn');
-            if (!btn.classList.contains('subscribed')) {
-                btn.classList.add('subscribed');
-                btn.innerText = '✅ Напоминание включено!';
-                if (window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.showAlert('Мы уведомим тебя, как только выйдет обновление!');
-                }
-            }
-        }
-
-        function updateCountdown() {
-            const now = Date.now();
-            const distance = targetUpdateDate - now;
-
-            if (distance <= 0) {
-                document.getElementById('countdownTimer').innerText = "ОБНОВА ВЫШЛА! 🔥";
-                // Автоматически разблокируем игру, когда время придет!
-                isGameLocked = false;
-                document.getElementById('lockOverlay').style.display = 'none';
-                return;
-            }
-
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            document.getElementById('countdownTimer').innerText = 
-                `${days}д ${hours}ч ${minutes}м ${seconds}с`;
-        }
-
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
     </script>
 </body>
 </html>
